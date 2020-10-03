@@ -10,7 +10,11 @@ class GameService: RemoteActor {
     private var game: Game?
 
     override func safeInit() {
+#if DEBUG
+        game = Game(42, 2000)
+#else
         game = Game(42, 5000)
+#endif
     }
 
     private func _bePlayerJoin(_ playerID: String, _ playerName: String) -> String {
@@ -26,6 +30,15 @@ class GameService: RemoteActor {
         guard let game = game else { return "" }
 
         if let json = try? game.getBoardUpdate(playerID, visWidth, visHeight).json() {
+            return json
+        }
+        return ""
+    }
+
+    private func _beMovePlayer(_ playerID: String, _ nodeIdx: Int, _ visWidth: Int, _ visHeight: Int) -> String {
+        guard let game = game else { return "" }
+
+        if let json = try? game.movePlayer(playerID, nodeIdx, visWidth, visHeight).json() {
             return json
         }
         return ""
@@ -51,6 +64,15 @@ extension GameService {
         let arg0: String
         let arg1: Int
         let arg2: Int
+    }
+    struct BeMovePlayerCodableResponse: Codable {
+        let response: String
+    }
+    struct BeMovePlayerCodableRequest: Codable {
+        let arg0: String
+        let arg1: Int
+        let arg2: Int
+        let arg3: Int
     }
 
     @discardableResult
@@ -86,6 +108,24 @@ extension GameService {
         }
         return self
     }
+    @discardableResult
+    public func beMovePlayer(_ playerID: String,
+                             _ nodeIdx: Int,
+                             _ visWidth: Int,
+                             _ visHeight: Int,
+                             _ sender: Actor,
+                             _ callback: @escaping (String) -> Void ) -> Self {
+        let msg = BeMovePlayerCodableRequest(arg0: playerID, arg1: nodeIdx, arg2: visWidth, arg3: visHeight)
+        // swiftlint:disable:next force_try
+        let data = try! JSONEncoder().encode(msg)
+        unsafeSendToRemote("GameService", "beMovePlayer", data, sender) {
+            callback(
+                // swiftlint:disable:next force_try
+                (try! JSONDecoder().decode(BeMovePlayerCodableResponse.self, from: $0).response)
+            )
+        }
+        return self
+    }
 
     public func unsafeRegisterAllBehaviors() {
         safeRegisterRemoteBehavior("bePlayerJoin") { [unowned self] (data) in
@@ -101,6 +141,13 @@ extension GameService {
             // swiftlint:disable:next force_try
             return try! JSONEncoder().encode(
                 BeGetBoardCodableResponse(response: self._beGetBoard(msg.arg0, msg.arg1, msg.arg2)))
+        }
+        safeRegisterRemoteBehavior("beMovePlayer") { [unowned self] (data) in
+            // swiftlint:disable:next force_try
+            let msg = try! JSONDecoder().decode(BeMovePlayerCodableRequest.self, from: data)
+            // swiftlint:disable:next force_try
+            return try! JSONEncoder().encode(
+                BeMovePlayerCodableResponse(response: self._beMovePlayer(msg.arg0, msg.arg1, msg.arg2, msg.arg3)))
         }
     }
 }

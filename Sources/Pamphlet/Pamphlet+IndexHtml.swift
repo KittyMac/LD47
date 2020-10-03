@@ -66,16 +66,20 @@ return ###"""
         var lastBoardUpdateCY = 0
         
         var animationCount = 0;
+        var playerCanMove = false;
+        
+        const gameContainer = new PIXI.Container();
+        app.stage.addChild(gameContainer);
         
         const boardGfx = new PIXI.Graphics();
-        app.stage.addChild(boardGfx);
+        gameContainer.addChild(boardGfx);
         
         const nodeText = new PIXI.Text('0000', {fontFamily : 'Helvetica', fontSize: 18, fill : 0xffffff, align : 'center'});
         nodeText.anchor.set(0.5, 0.5);
-        app.stage.addChild(nodeText);
+        gameContainer.addChild(nodeText);
         
         const playersContainer = new PIXI.Container();
-        app.stage.addChild(playersContainer);
+        gameContainer.addChild(playersContainer);
                 
         function animationUpdate() {
             animationCount += 0.1;
@@ -93,6 +97,21 @@ return ###"""
             for (j in playersContainer.children) {
                 let playerGfx = playersContainer.children[j];
                 playerGfx.rotation = animationCount * 0.1;
+                
+                playerGfx.x += (playerGfx.targetX - playerGfx.x) * 0.06135;
+                playerGfx.y += (playerGfx.targetY - playerGfx.y) * 0.06135;
+                
+                if (Math.abs(playerGfx.targetX - playerGfx.x) < kNodeSize &&
+                    Math.abs(playerGfx.targetY - playerGfx.y) < kNodeSize) {
+                    playerCanMove = true;
+                } else {
+                    playerCanMove = false;
+                }
+                
+                if (playerGfx.isPlayer) {
+                    gameContainer.x = -(playerGfx.x - app.renderer.width / 2)
+                    gameContainer.y = -(playerGfx.y - app.renderer.height / 2)
+                }
             }
         }
         
@@ -117,34 +136,18 @@ return ###"""
             return undefined;
         }
         
-        function getNodePos(node, cx, cy) {
-            return [node.x * kBoardToScreen + cx, node.y * kBoardToScreen + cy]
+        function getNodePos(node) {
+            return [node.x * kBoardToScreen, node.y * kBoardToScreen]
         }
         
         function updateBoard(board) {
-            let cx = app.renderer.width / 2
-            let cy = app.renderer.height / 2
-            
             lastBoardUpdate = board;
-            lastBoardUpdateCX = cx;
-            lastBoardUpdateCY = cy;
+            lastBoardUpdateCX = app.renderer.width;
+            lastBoardUpdateCY = app.renderer.height;
             
             // -1. we want to center the board around the player's nodeidx
             let nodes = board.nodes;
             let players = board.players;
-            
-            let player = board.player;
-            if (player != undefined) {
-                let playerNode = getNodeByIdx(nodes, player.nodeIdx);
-                if (playerNode != undefined) {
-                    cx -= playerNode.x * kBoardToScreen;
-                    cy -= playerNode.y * kBoardToScreen;
-                                        
-                    nodeText.x = cx + 0;
-                    nodeText.y = cy + kNodeSize * 2;
-                    nodeText.text = playerNode.d;
-                }
-            }
             
             boardGfx.clear()
             
@@ -152,12 +155,12 @@ return ###"""
             boardGfx.lineStyle(5, 0x373737, 1);
             for (i in nodes) {
                 let node = nodes[i];
-                let posA = getNodePos(node, cx, cy);
+                let posA = getNodePos(node);
                 
                 for (j in node.c) {
                     let nextNode = getNextNode(nodes, node, j);
                     if (nextNode != undefined) {
-                        let posB = getNodePos(nextNode, cx, cy);
+                        let posB = getNodePos(nextNode);
                         boardGfx.moveTo(posA[0], posA[1]);
                         boardGfx.lineTo(posB[0], posB[1]);
                     }
@@ -169,41 +172,58 @@ return ###"""
             for (i in nodes) {
                 let node = nodes[i];
                 boardGfx.beginFill(0xbdbdbd, 1);
-                let pos = getNodePos(node, cx, cy);
+                let pos = getNodePos(node);
                 boardGfx.drawCircle(pos[0], pos[1], kNodeSize);
                 boardGfx.endFill();
             }
+            
+            let thisPlayer = board.player;
             
             // 2. add the players
             for (i in players) {
                 let player = players[i];
                 let node = getNodeByIdx(nodes, player.nodeIdx);
-                
-                // does a graphics already exist for this one?
-                var playerGfx = undefined;
-                for (j in playersContainer.children) {
-                    let otherPlayerGfx = playersContainer.children[j];
-                    if (otherPlayerGfx.playerID == player.id) {
-                        playerGfx = otherPlayerGfx;
-                        break;
+                if (node != undefined) {
+                    // does a graphics already exist for this one?
+                    var playerGfx = undefined;
+                    for (j in playersContainer.children) {
+                        let otherPlayerGfx = playersContainer.children[j];
+                        if (otherPlayerGfx.playerID == player.id) {
+                            playerGfx = otherPlayerGfx;
+                            break;
+                        }
                     }
-                }
                 
-                if (playerGfx == undefined) {
-                    playerGfx = new PIXI.Graphics();
-                    playersContainer.addChild(playerGfx);
+                    if (playerGfx == undefined) {
+                        playerGfx = new PIXI.Graphics();
+                        playersContainer.addChild(playerGfx);
                     
-                    playerGfx.playerID = player.id;
+                        playerGfx.playerID = player.id;
                     
-                    playerGfx.beginFill(0xff0000, 1);
-                    playerGfx.drawStar(0, 0, 4, kPlayerSize);
-                    playerGfx.endFill();
+                        playerGfx.beginFill(0xff0000, 1);
+                        playerGfx.drawStar(0, 0, 4, kPlayerSize);
+                        playerGfx.endFill();
+                        
+                        let pos = getNodePos(node);
+                        playerGfx.x = pos[0];
+                        playerGfx.y = pos[1];
+                    }
+                
+                    let pos = getNodePos(node);
+                    playerGfx.targetX = pos[0];
+                    playerGfx.targetY = pos[1];
+                    
+                    playerGfx.isPlayer = (thisPlayer.id == player.id);
                 }
-                
-                let pos = getNodePos(node, cx, cy);
-                playerGfx.x = pos[0];
-                playerGfx.y = pos[1];
-                
+            }
+            
+            // 3. special stuff for THE player
+            if (thisPlayer != undefined) {
+                let playerNode = getNodeByIdx(nodes, thisPlayer.nodeIdx);
+                let pos = getNodePos(playerNode);
+                nodeText.x = pos[0];
+                nodeText.y = pos[1] + kNodeSize * 2.5;
+                nodeText.text = playerNode.d;
             }
         }
         
@@ -216,10 +236,44 @@ return ###"""
             }
         })
         
-        
+        // TODO: let the player name themselves and choose when to join the game
         registerPlayer("George", function (info) {
             print(info)
         })
+        
+        function onPointerDown(event) {
+            if (playerCanMove == false) {
+                return;
+            }
+            
+            let mousePos = event.data.getLocalPosition(gameContainer)
+            
+            // find the node nearest the click
+            var clickNode = undefined
+            var clickNodeDistance = (kNodeSize * 6) * (kNodeSize * 6)
+            let nodes = lastBoardUpdate.nodes;
+            for (i in nodes) {
+                let node = nodes[i];
+                let pos = getNodePos(node);
+                let dx = (mousePos.x - pos[0])
+                let dy = (mousePos.y - pos[1])
+                let d = dx * dx + dy * dy;
+                
+                if (d < clickNodeDistance) {
+                    clickNode = node;
+                    clickNodeDistance = d;
+                }
+            }
+            
+            if (clickNode != undefined) {
+                movePlayer(clickNode.id, function (info) {
+                    if (info.tag == "BoardUpdate") {
+                        updateBoard(info)
+                    }
+                })
+            }
+        }
+        app.renderer.plugins.interaction.on('pointerdown', onPointerDown);
         
         
         app.loader
@@ -255,4 +309,4 @@ public extension Pamphlet {
     }
 }
 
-private let gzip_data = Data(base64Encoded:"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")
+private let gzip_data = Data(base64Encoded:"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")

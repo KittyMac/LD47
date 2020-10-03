@@ -25,7 +25,7 @@ function gameUpdateLongPoll(callback) {
     xhttp.send(JSON.stringify(command));
 }
 
-function sendCommand(command, callback) {
+function sendCommand(commandName, commandJson, callback) {
     var xhttp = new XMLHttpRequest();
     xhttp.onreadystatechange = function() {
         if (this.readyState == 4) {
@@ -35,16 +35,22 @@ function sendCommand(command, callback) {
         }
     };
     xhttp.open("POST", "/");
-    xhttp.setRequestHeader("Flynn-Tag", "PlayerJoin");
+    xhttp.setRequestHeader("Flynn-Tag", commandName);
     xhttp.setRequestHeader("Pragma", "no-cache");
     xhttp.setRequestHeader("Expires", "-1");
     xhttp.setRequestHeader("Cache-Control", "no-cache");
     xhttp.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
-    xhttp.send(JSON.stringify(command));
+    xhttp.send(JSON.stringify(commandJson));
 }
 
 function registerPlayer(name, callback) {
-    sendCommand({
+    sendCommand("PlayerJoin", {
         playerName:name
+    }, callback)
+}
+
+function movePlayer(nodeIdx, callback) {
+    sendCommand("MovePlayer", {
+        nodeIdx:nodeIdx
     }, callback)
 }

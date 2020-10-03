@@ -8,7 +8,7 @@ import Pamphlet
 // swiftlint:disable cyclomatic_complexity
 
 typealias NodeIndex = Int
-let kNoNode: NodeIndex = 32767
+let kNoNode: NodeIndex = Int(UInt16.max)
 
 let kMaxDistance: Int = 32767
 
@@ -69,9 +69,11 @@ extension Game {
                 if let idx = mapIdx(mapX, mapY) {
                     if idx != 0 {
                         let nearNodeIdx = Int(nodeMap[idx])
-                        let nearNode = nodes[nearNodeIdx]
-                        if nearNodesFast[nearNodeIdx] == nil {
-                            nearNodesFast[nearNodeIdx] = nearNode
+                        if nearNodeIdx != kNoNode {
+                            let nearNode = nodes[nearNodeIdx]
+                            if nearNodesFast[nearNodeIdx] == nil {
+                                nearNodesFast[nearNodeIdx] = nearNode
+                            }
                         }
                     }
                 }
@@ -83,10 +85,21 @@ extension Game {
         }
     }
 
+    func mark(_ x: Int, _ y: Int, _ id: Int) {
+        // mark the spots on the map that are now invalid
+        for mapX in x-6..<x+6 {
+            for mapY in y-6..<y+6 {
+                if let idx = mapIdx(mapX, mapY) {
+                    nodeMap[idx] = UInt16(id)
+                }
+            }
+        }
+    }
+
     func generate(_ seed: Int, _ targetNodes: Int) {
         let rng: Randomable = Xoroshiro128Plus("\(seed)")
 
-        nodeMap = [UInt16](repeating: 0, count: kMaxMapSize * kMaxMapSize)
+        nodeMap = [UInt16](repeating: UInt16(kNoNode), count: kMaxMapSize * kMaxMapSize)
 
         nodes.removeAll()
         players.removeAll()
@@ -95,8 +108,11 @@ extension Game {
 
         // start with exit node (always index 0)
         let exitNode = Node(0, kMaxMapSize / 2, kMaxMapSize / 2)
+        exitNode.d = 0
         nodes.append(exitNode)
         openNodes.append(exitNode)
+
+        mark(exitNode.x, exitNode.y, exitNode.id)
 
         // until we have enough nodes
         while nodes.count < targetNodes {
@@ -121,7 +137,7 @@ extension Game {
                 // check to see if this spot is clear (make sure we're not
                 // too close to any other existing node
                 if let idx = mapIdx(x, y) {
-                    if nodeMap[idx] == 0 {
+                    if nodeMap[idx] == kNoNode {
                         valid = true
                         break
                     }
@@ -139,13 +155,7 @@ extension Game {
             openNodes.append(newNode)
 
             // mark the spots on the map that are now invalid
-            for mapX in x-6..<x+6 {
-                for mapY in y-6..<y+6 {
-                    if let idx = mapIdx(mapX, mapY) {
-                        nodeMap[idx] = UInt16(newNode.id)
-                    }
-                }
-            }
+            mark(x, y, newNode.id)
 
             // add connections for this node. if we always connect to our parent, then we know we will
             // always be able to reach the exit
@@ -188,8 +198,50 @@ extension Game {
         }
 
         // perform distance calculations so all nodes know how far they are from the exit
+        solve()
 
-        // nodes.append(Node(0, 0, 0).to(1).to(6))
+    }
+
+    public func solve() {
+        var changed = true
+        while changed {
+            changed = false
+
+            if transformForward() {
+                changed = true
+            }
+            if transformBackward() {
+                changed = true
+            }
+        }
+    }
+
+    private func transformForward() -> Bool {
+        var changed = false
+        for node in nodes where node.d > 0 {
+            for nextIdx in node.c {
+                let next = nodes[nextIdx]
+                if next.d >= 0 && next.d+1 < node.d {
+                    node.d = next.d+1
+                    changed = true
+                }
+            }
+        }
+        return changed
+    }
+
+    private func transformBackward() -> Bool {
+        var changed = false
+        for node in nodes.reversed() where node.d > 0 {
+            for nextIdx in node.c {
+                let next = nodes[nextIdx]
+                if next.d >= 0 && next.d+1 < node.d {
+                    node.d = next.d+1
+                    changed = true
+                }
+            }
+        }
+        return changed
     }
 
 }

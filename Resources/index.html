@@ -36,20 +36,22 @@
         var lastBoardUpdateCX = 0
         var lastBoardUpdateCY = 0
         
-        var animationCount = 0;
+        var playerCanMove = false;
+        
+        const gameContainer = new PIXI.Container();
+        app.stage.addChild(gameContainer);
         
         const boardGfx = new PIXI.Graphics();
-        app.stage.addChild(boardGfx);
+        gameContainer.addChild(boardGfx);
         
         const nodeText = new PIXI.Text('0000', {fontFamily : 'Helvetica', fontSize: 18, fill : 0xffffff, align : 'center'});
         nodeText.anchor.set(0.5, 0.5);
-        app.stage.addChild(nodeText);
+        gameContainer.addChild(nodeText);
         
         const playersContainer = new PIXI.Container();
-        app.stage.addChild(playersContainer);
+        gameContainer.addChild(playersContainer);
                 
         function animationUpdate() {
-            animationCount += 0.1;
             
             // 0. Did the screen change size since the last time we drew the board? if so, we
             // should redraw it so that it stays centered
@@ -63,7 +65,29 @@
             // 1. rotate all players
             for (j in playersContainer.children) {
                 let playerGfx = playersContainer.children[j];
-                playerGfx.rotation = animationCount * 0.1;
+                
+                playerGfx.x += (playerGfx.targetX - playerGfx.x) * 0.06135;
+                playerGfx.y += (playerGfx.targetY - playerGfx.y) * 0.06135;
+                
+                let dx = Math.abs(playerGfx.targetX - playerGfx.x);
+                let dy = Math.abs(playerGfx.targetY - playerGfx.y);
+                
+                var distanceToMove = (dx + dy) * 0.5;
+                
+                playerGfx.rotation += 0.01 * (1.0 + distanceToMove * 0.1);
+                
+                
+                
+                if (dx < kNodeSize && dy < kNodeSize) {
+                    playerCanMove = true;
+                } else {
+                    playerCanMove = false;
+                }
+                
+                if (playerGfx.isPlayer) {
+                    gameContainer.x = -(playerGfx.x - app.renderer.width / 2)
+                    gameContainer.y = -(playerGfx.y - app.renderer.height / 2)
+                }
             }
         }
         
@@ -88,30 +112,18 @@
             return undefined;
         }
         
-        function getNodePos(node, cx, cy) {
-            return [node.x * kBoardToScreen + cx, node.y * kBoardToScreen + cy]
+        function getNodePos(node) {
+            return [node.x * kBoardToScreen, node.y * kBoardToScreen]
         }
         
-        function updateBoard(board) {
-            let cx = app.renderer.width / 2
-            let cy = app.renderer.height / 2
-            
-            lastBoardUpdate = board;
-            lastBoardUpdateCX = cx;
-            lastBoardUpdateCY = cy;
+        function updateBoard(board) {            
+            lastBoardUpdate = board;            
+            lastBoardUpdateCX = app.renderer.width;
+            lastBoardUpdateCY = app.renderer.height;
             
             // -1. we want to center the board around the player's nodeidx
             let nodes = board.nodes;
             let players = board.players;
-            
-            let player = board.player;
-            if (player != undefined) {
-                let playerNode = getNodeByIdx(nodes, player.nodeIdx);
-                if (playerNode != undefined) {
-                    cx -= playerNode.x * kBoardToScreen;
-                    cy -= playerNode.y * kBoardToScreen;
-                }
-            }
             
             boardGfx.clear()
             
@@ -119,12 +131,12 @@
             boardGfx.lineStyle(5, 0x373737, 1);
             for (i in nodes) {
                 let node = nodes[i];
-                let posA = getNodePos(node, cx, cy);
+                let posA = getNodePos(node);
                 
                 for (j in node.c) {
                     let nextNode = getNextNode(nodes, node, j);
                     if (nextNode != undefined) {
-                        let posB = getNodePos(nextNode, cx, cy);
+                        let posB = getNodePos(nextNode);
                         boardGfx.moveTo(posA[0], posA[1]);
                         boardGfx.lineTo(posB[0], posB[1]);
                     }
@@ -136,46 +148,55 @@
             for (i in nodes) {
                 let node = nodes[i];
                 boardGfx.beginFill(0xbdbdbd, 1);
-                let pos = getNodePos(node, cx, cy);
+                let pos = getNodePos(node);
                 boardGfx.drawCircle(pos[0], pos[1], kNodeSize);
                 boardGfx.endFill();
             }
+            
+            let thisPlayer = board.player;
             
             // 2. add the players
             for (i in players) {
                 let player = players[i];
                 let node = getNodeByIdx(nodes, player.nodeIdx);
-                
-                // does a graphics already exist for this one?
-                var playerGfx = undefined;
-                for (j in playersContainer.children) {
-                    let otherPlayerGfx = playersContainer.children[j];
-                    if (otherPlayerGfx.playerID == player.id) {
-                        playerGfx = otherPlayerGfx;
-                        break;
+                if (node != undefined) {
+                    // does a graphics already exist for this one?
+                    var playerGfx = undefined;
+                    for (j in playersContainer.children) {
+                        let otherPlayerGfx = playersContainer.children[j];
+                        if (otherPlayerGfx.playerID == player.id) {
+                            playerGfx = otherPlayerGfx;
+                            break;
+                        }
                     }
-                }
                 
-                if (playerGfx == undefined) {
-                    playerGfx = new PIXI.Graphics();
-                    playersContainer.addChild(playerGfx);
+                    if (playerGfx == undefined) {
+                        playerGfx = new PIXI.Graphics();
+                        playersContainer.addChild(playerGfx);
                     
-                    playerGfx.playerID = player.id;
+                        playerGfx.playerID = player.id;
                     
-                    playerGfx.beginFill(0xff0000, 1);
-                    playerGfx.drawStar(0, 0, 4, kPlayerSize);
-                    playerGfx.endFill();
-                }
+                        playerGfx.beginFill(0xff0000, 1);
+                        playerGfx.drawStar(0, 0, 4, kPlayerSize);
+                        playerGfx.endFill();
+                        
+                        let pos = getNodePos(node);
+                        playerGfx.x = pos[0];
+                        playerGfx.y = pos[1];
+                    }
                 
-                let pos = getNodePos(node, cx, cy);
-                playerGfx.x = pos[0];
-                playerGfx.y = pos[1];
+                    let pos = getNodePos(node);
+                    playerGfx.targetX = pos[0];
+                    playerGfx.targetY = pos[1];
+                    
+                    playerGfx.isPlayer = (thisPlayer.id == player.id);
+                }
             }
             
             // 3. special stuff for THE player
-            if (player != undefined) {
-                let playerNode = getNodeByIdx(nodes, player.nodeIdx);
-                let pos = getNodePos(playerNode, cx, cy);
+            if (thisPlayer != undefined) {
+                let playerNode = getNodeByIdx(nodes, thisPlayer.nodeIdx);
+                let pos = getNodePos(playerNode);
                 nodeText.x = pos[0];
                 nodeText.y = pos[1] + kNodeSize * 2.5;
                 nodeText.text = playerNode.d;
@@ -191,10 +212,44 @@
             }
         })
         
-        
+        // TODO: let the player name themselves and choose when to join the game
         registerPlayer("George", function (info) {
             print(info)
         })
+        
+        function onPointerDown(event) {
+            if (playerCanMove == false) {
+                return;
+            }
+            
+            let mousePos = event.data.getLocalPosition(gameContainer)
+            
+            // find the node nearest the click
+            var clickNode = undefined
+            var clickNodeDistance = (kNodeSize * 6) * (kNodeSize * 6)
+            let nodes = lastBoardUpdate.nodes;
+            for (i in nodes) {
+                let node = nodes[i];
+                let pos = getNodePos(node);
+                let dx = (mousePos.x - pos[0])
+                let dy = (mousePos.y - pos[1])
+                let d = dx * dx + dy * dy;
+                
+                if (d < clickNodeDistance) {
+                    clickNode = node;
+                    clickNodeDistance = d;
+                }
+            }
+            
+            if (clickNode != undefined) {
+                movePlayer(clickNode.id, function (info) {
+                    if (info.tag == "BoardUpdate") {
+                        updateBoard(info)
+                    }
+                })
+            }
+        }
+        app.renderer.plugins.interaction.on('pointerdown', onPointerDown);
         
         
         app.loader

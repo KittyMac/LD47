@@ -4,8 +4,6 @@ import Socket
 import PicaroonFramework
 import Pamphlet
 
-// swiftlint:disable identifier_name
-
 // The network of nodes is a tight array of nodes, each node
 // has a X/Y position and can contain up to four connections
 // to other nodes. d is the distance needed to travel from
@@ -28,6 +26,8 @@ class Game {
     var nodes: [Node] = []
     var players: [String: Player] = [:]
 
+    let rng: Randomable = Xoroshiro128Plus()
+
     init() {
 
     }
@@ -36,11 +36,26 @@ class Game {
         generate(seed, numNodes)
     }
 
+    func getSpawnIdx() -> Int {
+        // find a node which is sufficiently distant from the exit node
+        var spawn = nodes[0]
+
+        for _ in 0..<100 {
+            let node = rng.get(nodes)
+            if node.d > spawn.d {
+                spawn = node
+            }
+        }
+
+        return spawn.id
+    }
+
     func addPlayer(_ playerID: String, _ playerName: String) -> PlayerInfo {
         if let player = players[playerID] {
             return PlayerInfo(player: player)
         }
         let player = Player(playerID, playerName)
+        player.nodeIdx = getSpawnIdx()
         players[playerID] = player
         return PlayerInfo(player: player)
     }
@@ -76,6 +91,24 @@ class Game {
             }
 
             return BoardUpdate(nodes: visNodes, players: visPlayers, player: player)
+        }
+
+        return nil
+    }
+
+    func movePlayer(_ playerID: String, _ nodeIdx: Int, _ visWidth: Int, _ visHeight: Int) -> BoardUpdate? {
+        if let player = players[playerID] {
+            let playerNode = nodes[player.nodeIdx]
+
+            // the player may only move to a node which is adjacent to the player's current node
+            if playerNode.c.contains(nodeIdx) == false {
+                return nil
+            }
+
+            player.nodeIdx = nodeIdx
+
+            // If we moved the player, then we should send back an updated gameboard
+            return getBoardUpdate(playerID, visWidth, visHeight)
         }
 
         return nil
