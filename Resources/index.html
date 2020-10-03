@@ -37,6 +37,10 @@
         const boardGfx = new PIXI.Graphics();
         app.stage.addChild(boardGfx);
         
+        const nodeText = new PIXI.Text('0000', {fontFamily : 'Helvetica', fontSize: 18, fill : 0xffffff, align : 'center'});
+        nodeText.anchor.set(0.5, 0.5);
+        app.stage.addChild(nodeText);
+        
         const playersContainer = new PIXI.Container();
         app.stage.addChild(playersContainer);
                 
@@ -98,10 +102,14 @@
             
             let player = board.player;
             if (player != undefined) {
-                let node = getNodeByIdx(nodes, player.nodeIdx);
-                if (node != undefined) {
-                    cx -= node.x * kBoardToScreen;
-                    cy -= node.y * kBoardToScreen;
+                let playerNode = getNodeByIdx(nodes, player.nodeIdx);
+                if (playerNode != undefined) {
+                    cx -= playerNode.x * kBoardToScreen;
+                    cy -= playerNode.y * kBoardToScreen;
+                                        
+                    nodeText.x = cx + 0;
+                    nodeText.y = cy + kNodeSize * 2;
+                    nodeText.text = playerNode.d;
                 }
             }
             
