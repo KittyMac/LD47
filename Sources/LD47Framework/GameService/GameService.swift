@@ -17,10 +17,10 @@ class GameService: RemoteActor {
 #endif
     }
 
-    private func _bePlayerJoin(_ playerID: String, _ playerName: String) -> String {
+    private func _bePlayerJoin(_ playerID: String, _ teamId: Int, _ playerName: String) -> String {
         guard let game = game else { return "" }
 
-        if let json = try? game.addPlayer(playerID, playerName).json() {
+        if let json = try? game.addPlayer(playerID, teamId, playerName).json() {
             return json
         }
         return ""
@@ -55,7 +55,8 @@ extension GameService {
     }
     struct BePlayerJoinCodableRequest: Codable {
         let arg0: String
-        let arg1: String
+        let arg1: Int
+        let arg2: String
     }
     struct BeGetBoardCodableResponse: Codable {
         let response: String
@@ -77,10 +78,11 @@ extension GameService {
 
     @discardableResult
     public func bePlayerJoin(_ playerID: String,
+                             _ teamId: Int,
                              _ playerName: String,
                              _ sender: Actor,
                              _ callback: @escaping (String) -> Void ) -> Self {
-        let msg = BePlayerJoinCodableRequest(arg0: playerID, arg1: playerName)
+        let msg = BePlayerJoinCodableRequest(arg0: playerID, arg1: teamId, arg2: playerName)
         // swiftlint:disable:next force_try
         let data = try! JSONEncoder().encode(msg)
         unsafeSendToRemote("GameService", "bePlayerJoin", data, sender) {
@@ -133,7 +135,7 @@ extension GameService {
             let msg = try! JSONDecoder().decode(BePlayerJoinCodableRequest.self, from: data)
             // swiftlint:disable:next force_try
             return try! JSONEncoder().encode(
-                BePlayerJoinCodableResponse(response: self._bePlayerJoin(msg.arg0, msg.arg1)))
+                BePlayerJoinCodableResponse(response: self._bePlayerJoin(msg.arg0, msg.arg1, msg.arg2)))
         }
         safeRegisterRemoteBehavior("beGetBoard") { [unowned self] (data) in
             // swiftlint:disable:next force_try

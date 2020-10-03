@@ -50,11 +50,11 @@ class Game {
         return spawn.id
     }
 
-    func addPlayer(_ playerID: String, _ playerName: String) -> PlayerInfo {
+    func addPlayer(_ playerID: String, _ teamId: Int, _ playerName: String) -> PlayerInfo {
         if let player = players[playerID] {
             return PlayerInfo(player: player)
         }
-        let player = Player(playerID, playerName)
+        let player = Player(playerID, teamId, playerName)
         player.nodeIdx = getSpawnIdx()
         players[playerID] = player
         return PlayerInfo(player: player)

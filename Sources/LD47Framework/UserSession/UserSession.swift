@@ -51,12 +51,14 @@ public class LD47UserSession: UserSession {
 
             struct PlayerJoinRequest: Codable {
                 let playerName: String
+                let teamId: Int
             }
 
             if let request: PlayerJoinRequest = try? httpRequest.content?.decoded() {
                 Flynn.Root.remoteActorByUUID(GameService.serviceName, self) {
                     if let game = $0 as? GameService {
                         game.bePlayerJoin(self.unsafeSessionUUID,
+                                          request.teamId,
                                           request.playerName,
                                           self) {
                             connection.beSendData(HttpResponse.asData(self, .ok, .txt, $0))

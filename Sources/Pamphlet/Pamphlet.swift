@@ -35,7 +35,10 @@ public enum Pamphlet {
     }
     public static func get(data member: String) -> Data? {
         switch member {
-
+        case "/player0.png": return Pamphlet.Player0Png()
+        case "/player1.png": return Pamphlet.Player1Png()
+        case "/player2.png": return Pamphlet.Player2Png()
+        case "/player3.png": return Pamphlet.Player3Png()
         default: break
         }
         return nil

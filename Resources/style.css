@@ -49,9 +49,11 @@
 }
 
 #playButton { 
-    width: 76%;
+    width: 50%;
 	
 	font-family: zekton;
+    
+    margin-top: 50px;
 
 	padding-left: 2em;
 	padding-right: 2em;

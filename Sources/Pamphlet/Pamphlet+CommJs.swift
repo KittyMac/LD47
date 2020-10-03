@@ -80,9 +80,10 @@ function sendCommand(commandName, commandJson, callback) {
     xhttp.send(JSON.stringify(commandJson));
 }
 
-function registerPlayer(name, callback) {
+function registerPlayer(name, teamId, callback) {
     sendCommand("PlayerJoin", {
-        playerName:name
+        playerName:name,
+        teamId:teamId
     }, callback)
 }
 
@@ -103,4 +104,4 @@ public extension Pamphlet {
     }
 }
 
-private let gzip_data = Data(base64Encoded:"H4sIAAAAAAACA+VUTW+bQBC9+1dMOWHJ2E7VQ+WIS62mqZUPqyZSr1sYwzawS3fXsVHFf+8shgSwWzdpL1X3YIvlvXnDzJtZb0RouBQQswzv8ogZvJIiXso0dUOWpl9YeD+E70BnYH8emIJdYkwOPgjcwufrq0t6+oTfNqiNOzyvUBViLIVCFhXaUNAwYSJGIq1rQZeiVlh7+Bpck3A9rggrSwDfhzdtTAdnY260xbyeTvsoe1I0oFDnUmhcaPo+Hxar25txzpTGRmv/OsCdqfPua3UivPJhIyJcc4HRMUl7mpJ1mEeClwc3Gk3AM5Qb47ZL9Ou+lCM460UvAVONR9J7scCUKtzT6DwNutdlxwI5CtdZ3q4CZwTOxOn4gzKqfXNJbUflOhdpIYQXsNiiP6B5J5mKTpGWisUZswwhvZCFCZ5ivN/lnBpkKd7ZKfDcRvTmUhgl0+eoWAoK4wVFjpbH8jzlIbOFn3wlW5zTTJAZjX8XXHhvm2iDxr2hzDImIjLuUy+3M6Ao5FzyoUI13vLIJDCB+6pQgVyFClGMHvFJD58gjxNzQDjsmyaGWw2MNoqLmK8Lt05oSImWg0HjIbDQ+f5VA7khS42aD7ATMILWLvmn9ohFNrn/1gb488Xz4uXznAV0fAmVPxnzvzvZLZf8V6N9crSqXvXGS2HMtUG1TFlB0mI/Wr1pas+gs0cuJBeU2pNT8uraFn1mg+w72grVUc3kAzaKMsKP0e6E6PUjoSNak2f1/xHRH6/FV1WBCAAA")
+private let gzip_data = Data(base64Encoded:"H4sIAAAAAAACA+VUTY+bMBC951e4nIgUkmzVQ5UVl0bd7kb7ETWs1KsLE3AXbGqbTaKK/75jPrJAaOlue6nqAwj7vTeD581sM+5rJjgJaQL3aUA1XAserkUc2z6N46/UfxiTHwTXyDweqST7SOuUuITDjny5ub7Er8/wPQOl7fF5gSoQU8El0OCgNIr6EeUhIGlbBbRRtcCaxbbE1hFT04KwMQTiuuRdE9PCGc1MGczb+byLMisGTSSoVHAFK4X/55LV5u52mlKpoI5VHnuw11Xe3VgthTcuyXgAW8Yh6AtpVn1lLWaPeH6yo0B7LAGRabt5Rb+uSz4hZx31nECsoCe9VweY4w13YrS+Ru3tvGWBFLhtre82njUh1sxq+QMzqnxziWUHaVsX8YFzx6OhQX8C/UFQGQyR1pKGCTUMLhyf+hEMMT7uU4YFMhTnbAi8NIrOUnAtRfySKIYCXDveIQXDo2kaM5+ai599Q1ucY0+gGbV7710472u1Ue1eXyQJ5QEa97mWuwVBFXQu+lCCnO5YoCMyIw/FRXli40sAPjniow4+AhZG+oRwWjeFDLtoGKUl4yHbHuwqoTEmmo9GtYeIgS7Loxpyi5aa1D9gOmBCGrPkn5ojBlnn/lsT4M8Hz6uHz0sGUP8Qyn/S5n+3sxsu+a9ae7C1ilp12ktCyJQGuY7pAUPzorU00OQqOO2qZi9aJWMlGMcUnx2TFtvm8heF2PGgFF2Ur7LgjQitpBLxCHVCIoCrYD+Qy82R0MqlIi+qd0/QJ6QDpN+gCAAA")

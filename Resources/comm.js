@@ -51,9 +51,10 @@ function sendCommand(commandName, commandJson, callback) {
     xhttp.send(JSON.stringify(commandJson));
 }
 
-function registerPlayer(name, callback) {
+function registerPlayer(name, teamId, callback) {
     sendCommand("PlayerJoin", {
-        playerName:name
+        playerName:name,
+        teamId:teamId
     }, callback)
 }
 
