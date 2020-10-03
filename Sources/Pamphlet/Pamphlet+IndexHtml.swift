@@ -54,16 +54,32 @@ return ###"""
         
         // The conversion from board units to screen units
         const kBoardToScreen = 50
-        const kNodeSize = 25
+        const kNodeSize = 20
+        const kPlayerSize = 35
+        
+        //const kBoardToScreen = 10
+        //const kNodeSize = 4
+        //const kPlayerSize = 7
         
         var lastBoardUpdate = {}
         var lastBoardUpdateCX = 0
         var lastBoardUpdateCY = 0
         
+        var animationCount = 0;
+        
         const boardGfx = new PIXI.Graphics();
         app.stage.addChild(boardGfx);
+        
+        const nodeText = new PIXI.Text('0000', {fontFamily : 'Helvetica', fontSize: 18, fill : 0xffffff, align : 'center'});
+        nodeText.anchor.set(0.5, 0.5);
+        app.stage.addChild(nodeText);
+        
+        const playersContainer = new PIXI.Container();
+        app.stage.addChild(playersContainer);
                 
         function animationUpdate() {
+            animationCount += 0.1;
+            
             // 0. Did the screen change size since the last time we drew the board? if so, we
             // should redraw it so that it stays centered
             let cx = app.renderer.width / 2
@@ -72,12 +88,31 @@ return ###"""
             if (lastBoardUpdateCX != cx || lastBoardUpdateCY != cy) {
                 updateBoard(lastBoardUpdate);
             }
+            
+            // 1. rotate all players
+            for (j in playersContainer.children) {
+                let playerGfx = playersContainer.children[j];
+                playerGfx.rotation = animationCount * 0.1;
+            }
+        }
+        
+        
+        function getNodeByIdx(nodes, idx) {
+            // we've can't just use nextIdx to index the array because we are not
+            // given ALL of the nodes
+            for (i in nodes) {
+                let node = nodes[i]
+                if (node.id == idx) {
+                    return node;
+                }
+            }
+            return undefined;
         }
         
         function getNextNode(nodes, current, idx) {
             let nextIdx = current.c[idx];
             if (nextIdx != undefined) {
-                return nodes[nextIdx];
+                return getNodeByIdx(nodes, nextIdx);
             }
             return undefined;
         }
@@ -96,12 +131,19 @@ return ###"""
             
             // -1. we want to center the board around the player's nodeidx
             let nodes = board.nodes;
+            let players = board.players;
             
             let player = board.player;
             if (player != undefined) {
-                let node = nodes[player.nodeIdx];
-                cx -= node.x * kBoardToScreen;
-                cy -= node.y * kBoardToScreen;
+                let playerNode = getNodeByIdx(nodes, player.nodeIdx);
+                if (playerNode != undefined) {
+                    cx -= playerNode.x * kBoardToScreen;
+                    cy -= playerNode.y * kBoardToScreen;
+                                        
+                    nodeText.x = cx + 0;
+                    nodeText.y = cy + kNodeSize * 2;
+                    nodeText.text = playerNode.d;
+                }
             }
             
             boardGfx.clear()
@@ -131,6 +173,38 @@ return ###"""
                 boardGfx.drawCircle(pos[0], pos[1], kNodeSize);
                 boardGfx.endFill();
             }
+            
+            // 2. add the players
+            for (i in players) {
+                let player = players[i];
+                let node = getNodeByIdx(nodes, player.nodeIdx);
+                
+                // does a graphics already exist for this one?
+                var playerGfx = undefined;
+                for (j in playersContainer.children) {
+                    let otherPlayerGfx = playersContainer.children[j];
+                    if (otherPlayerGfx.playerID == player.id) {
+                        playerGfx = otherPlayerGfx;
+                        break;
+                    }
+                }
+                
+                if (playerGfx == undefined) {
+                    playerGfx = new PIXI.Graphics();
+                    playersContainer.addChild(playerGfx);
+                    
+                    playerGfx.playerID = player.id;
+                    
+                    playerGfx.beginFill(0xff0000, 1);
+                    playerGfx.drawStar(0, 0, 4, kPlayerSize);
+                    playerGfx.endFill();
+                }
+                
+                let pos = getNodePos(node, cx, cy);
+                playerGfx.x = pos[0];
+                playerGfx.y = pos[1];
+                
+            }
         }
         
         gameUpdateLongPoll(function (info) {
@@ -144,7 +218,7 @@ return ###"""
         
         
         registerPlayer("George", function (info) {
-            console.log(info)
+            print(info)
         })
         
         
@@ -181,4 +255,4 @@ public extension Pamphlet {
     }
 }
 
-private let gzip_data = Data(base64Encoded:"H4sIAAAAAAACA7VY30/jOBB+718xm5dL70pa2OU4iZbTwWoREkLo4KQ9IR7cxE0MqV3ZLm1ut//7zdhNaZM0sA8bJEjsb359Mx7bdDrDD4mKbTHjkNlpftYZln84S846gM9wyi2DOGPacDsK5nZy8EewnrLC5vzs+vOnk2Hfv/vxXMhn0DwfBcYWOTcZ5zaATPPJeiSKjUElw763MzSxFjMLRsejIGdjFj3h9LDvhyvzsZpO2+ZnYimiqZBvYths1oZJ82jKrBbLBmWd4VglxTraRLyASLxSAuG3n/HTa51E8iiwfGn7T+yF+dE1kRswPegWjEBIYW9RYditI/p9GPOYzQ0HASxfsMLAlD1zsJnAN2EsfnzYwGdaSIsqYyWNQu5zlTbqvM84YV64NkJJmGg1hbFiOoE5OmPAKkCvOZf+eyNKei08nxP0Xt15yAiOB1XEjUr4nfiP4+TRcd2FF6YhZ8Y6Rf/MEmYJ+W3VBrj4ipBBK+LfHUTFJxff5WSJGMkXcHv19Sq61GyWidiE3dPtpERIa8ojliQXmciTsBTdQtWMTOYytkQmkwKLCd+8U2EXvu1IIf2DCD6LBHPIS5px0ckUv4gyI2TM3STFB1ZMOSw4JBq9plHnzZ8gJmBUD2eq2k2m5nmCizLRbAECa1yhHLPu1VIFxVxajvM7kjm3EBM7RIDmMkGEjhYisRn04aiOLarYjIs0szXwzgd6HdYT+2FEpr9/b8goTRVVDumZO4QDVzVW8vRaVqvO/ryl3N7gkqXKDSX+Mj2I5xqDsz1c88uqC0SBRPxVQpytkVH8gNDH01rIJRKjmSNbEyF50hSU5nauJTj7D2uhx33RbAlslJ6+O1Y0cauMCxUjXfYaaF4rfyBMtIRfqyv/NyfnZovG2eLxXe5sp9JVdxPZP7826x3JOXPaBnJdKV62Y6gvxcXpfsu4ag8OI1rlC4YNHNuvX6Kv6x2YVphkNzDLWcH1L8Yxj/VWr0sqn9L9yH21GCcJr3Ij4j/rZbyGvVXFpQ/Ual0leznnSb2gXYtewoEHN9RZA7zYwIs34Kv9gZdtPYpzzvTW9tuUH+zZrp+yPAc18e0Z4ze0u0iOdSxTN+gCbjZD+Ds6E4XHPRgsP57QTw8OK+1qojSEAo8FXte7CBYNnLq8KvMXgvat95b9bMebp9KbKG5yZ7sf3ni3Grqpt/zUYHS7Szr5twqsEuJ5JcS1mpYwa7mZqhd+r0Li62Hw2HPEPRw+vkeU0upFz0vR8/2iq077yKq1Cg/rVfiughv8pBrbmBrzVMgvIs/DwXKc0E+9sLcy9kM1uTFCoV8IjcuV2C7JRq57ryfONnncDJyLP3I+SNmU+zZ+rWR6q1B8s2+FQk5UlTsqZBqP8AwJoxEEWztB8NZBxilsqYea8lvXWa9wqFG3uxC0al013Do6rweAFK8YXHsrYXDJlU550IN2CrauHxXbrdZow84Vww17665Cp/AwMDMWk91Aze21wlLru5HoaZYG3RraNeYdtBupoJ2tMPQWexirUXMd02IYndXO7M7cHdLpzgV0BfMfITqNhrx/lbrqe7M7UvcCx9Id2dLbo5OPh7hoBkefui27de16sTuLFFoRP+NmS0yEDbHQs8BrDQ8pTZReab9orPK/WenS4e/dfV233XxDO9sXy2rf5vN69XZDw76/fw/7/v8V/wNsN6PsyRAAAA==")
+private let gzip_data = Data(base64Encoded:"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")

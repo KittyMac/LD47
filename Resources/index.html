@@ -28,6 +28,10 @@
         const kNodeSize = 20
         const kPlayerSize = 35
         
+        //const kBoardToScreen = 10
+        //const kNodeSize = 4
+        //const kPlayerSize = 7
+        
         var lastBoardUpdate = {}
         var lastBoardUpdateCX = 0
         var lastBoardUpdateCY = 0
@@ -106,10 +110,6 @@
                 if (playerNode != undefined) {
                     cx -= playerNode.x * kBoardToScreen;
                     cy -= playerNode.y * kBoardToScreen;
-                                        
-                    nodeText.x = cx + 0;
-                    nodeText.y = cy + kNodeSize * 2;
-                    nodeText.text = playerNode.d;
                 }
             }
             
@@ -170,7 +170,15 @@
                 let pos = getNodePos(node, cx, cy);
                 playerGfx.x = pos[0];
                 playerGfx.y = pos[1];
-                
+            }
+            
+            // 3. special stuff for THE player
+            if (player != undefined) {
+                let playerNode = getNodeByIdx(nodes, player.nodeIdx);
+                let pos = getNodePos(playerNode, cx, cy);
+                nodeText.x = pos[0];
+                nodeText.y = pos[1] + kNodeSize * 2.5;
+                nodeText.text = playerNode.d;
             }
         }
         

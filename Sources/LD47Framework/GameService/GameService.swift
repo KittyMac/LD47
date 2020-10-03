@@ -7,13 +7,15 @@ import Pamphlet
 class GameService: RemoteActor {
     static let serviceName = "LD47_GAME_SERVICE"
 
-    private var game = Game()
+    private var game: Game?
 
     override func safeInit() {
-        game = Game(42)
+        game = Game(42, 5000)
     }
 
     private func _bePlayerJoin(_ playerID: String, _ playerName: String) -> String {
+        guard let game = game else { return "" }
+
         if let json = try? game.addPlayer(playerID, playerName).json() {
             return json
         }
@@ -21,6 +23,8 @@ class GameService: RemoteActor {
     }
 
     private func _beGetBoard(_ playerID: String, _ visWidth: Int, _ visHeight: Int) -> String {
+        guard let game = game else { return "" }
+
         if let json = try? game.getBoardUpdate(playerID, visWidth, visHeight).json() {
             return json
         }

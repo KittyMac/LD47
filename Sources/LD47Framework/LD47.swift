@@ -29,10 +29,10 @@ public enum LD47Server {
     public static func http(_ address: String,
                             _ port: Int) {
 
-#if DEBUG
+//#if DEBUG
         Flynn.Node.connect("127.0.0.1", 9090, [GameService.self], false)
         Flynn.Node.registerActorsWithRoot([GameService(GameService.serviceName)])
-#endif
+//#endif
 
         Flynn.Root.listen("0.0.0.0", 9090, [GameService.self])
 

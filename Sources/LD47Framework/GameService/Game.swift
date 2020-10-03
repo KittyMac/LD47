@@ -11,35 +11,6 @@ import Pamphlet
 // to other nodes. d is the distance needed to travel from
 // here to the exit.  The exit is always node 0.
 
-typealias NodeIndex = Int
-let kNoNode: NodeIndex = 32767
-
-let kMaxDistance: Int = 32767
-
-class Node: Codable, Equatable {
-    static func == (lhs: Node, rhs: Node) -> Bool {
-        return lhs.id == rhs.id
-    }
-
-    var id: NodeIndex = kNoNode
-    var x: Int
-    var y: Int
-    var c: [NodeIndex] = []
-    var d: Int
-
-    init(_ id: Int, _ x: Int, _ y: Int) {
-        self.id = id
-        self.x = x
-        self.y = y
-        self.d = kMaxDistance
-    }
-
-    func to(_ other: Int) -> Self {
-        c.append(other)
-        return self
-    }
-}
-
 struct BoardUpdate: Codable {
     var tag: String = "BoardUpdate"
     var nodes: [Node]
@@ -53,6 +24,7 @@ struct PlayerInfo: Codable {
 }
 
 class Game {
+    var nodeMap: [UInt16] = []
     var nodes: [Node] = []
     var players: [String: Player] = [:]
 
@@ -60,15 +32,8 @@ class Game {
 
     }
 
-    init(_ seed: Int32) {
-        nodes.append(Node(0, 0, 0).to(1).to(6))
-        nodes.append(Node(1, 5, 0).to(0).to(2).to(3))
-        nodes.append(Node(2, 10, 5).to(1))
-        nodes.append(Node(3, 10, -5).to(1).to(4))
-        nodes.append(Node(4, 30, -30).to(3).to(5))
-        nodes.append(Node(5, 90, -90).to(4))
-
-        nodes.append(Node(6, -9000, 9000).to(0))
+    init(_ seed: Int, _ numNodes: Int) {
+        generate(seed, numNodes)
     }
 
     func addPlayer(_ playerID: String, _ playerName: String) -> PlayerInfo {
@@ -89,12 +54,7 @@ class Game {
             var visNodes: [Node] = []
             var visPlayers: [Player] = []
 
-            for node in nodes {
-                if  abs(node.x - playerNode.x) < visWidth * 2 &&
-                    abs(node.y - playerNode.y) < visHeight * 2 {
-                    visNodes.append(node)
-                }
-            }
+            nodesNear(playerNode.x, playerNode.y, visWidth/2, visHeight/2, &visNodes)
 
             // 2. run back through the nodes, add any nodes which are connected to a visNode
             for node in visNodes {
