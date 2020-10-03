@@ -20,8 +20,8 @@ class GameService: RemoteActor {
         return ""
     }
 
-    private func _beGetBoard(_ playerID: String) -> String {
-        if let json = try? game.getBoardUpdate(playerID).json() {
+    private func _beGetBoard(_ playerID: String, _ visWidth: Int, _ visHeight: Int) -> String {
+        if let json = try? game.getBoardUpdate(playerID, visWidth, visHeight).json() {
             return json
         }
         return ""
@@ -45,6 +45,8 @@ extension GameService {
     }
     struct BeGetBoardCodableRequest: Codable {
         let arg0: String
+        let arg1: Int
+        let arg2: Int
     }
 
     @discardableResult
@@ -65,9 +67,11 @@ extension GameService {
     }
     @discardableResult
     public func beGetBoard(_ playerID: String,
+                           _ visWidth: Int,
+                           _ visHeight: Int,
                            _ sender: Actor,
                            _ callback: @escaping (String) -> Void ) -> Self {
-        let msg = BeGetBoardCodableRequest(arg0: playerID)
+        let msg = BeGetBoardCodableRequest(arg0: playerID, arg1: visWidth, arg2: visHeight)
         // swiftlint:disable:next force_try
         let data = try! JSONEncoder().encode(msg)
         unsafeSendToRemote("GameService", "beGetBoard", data, sender) {
@@ -92,7 +96,7 @@ extension GameService {
             let msg = try! JSONDecoder().decode(BeGetBoardCodableRequest.self, from: data)
             // swiftlint:disable:next force_try
             return try! JSONEncoder().encode(
-                BeGetBoardCodableResponse(response: self._beGetBoard(msg.arg0)))
+                BeGetBoardCodableResponse(response: self._beGetBoard(msg.arg0, msg.arg1, msg.arg2)))
         }
     }
 }

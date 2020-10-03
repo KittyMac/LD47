@@ -11,13 +11,18 @@ function gameUpdateLongPoll(callback) {
             
         }
     };
-    xhttp.open("GET", "/");
+    xhttp.open("POST", "/");
     xhttp.setRequestHeader("Flynn-Tag", "GetBoard");
     xhttp.setRequestHeader("Pragma", "no-cache");
     xhttp.setRequestHeader("Expires", "-1");
     xhttp.setRequestHeader("Cache-Control", "no-cache");
     xhttp.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
-    xhttp.send();
+    
+    let command = {
+        w: app.renderer.width / kBoardToScreen,
+        h: app.renderer.height / kBoardToScreen
+    };
+    xhttp.send(JSON.stringify(command));
 }
 
 function sendCommand(command, callback) {
@@ -29,7 +34,7 @@ function sendCommand(command, callback) {
             }
         }
     };
-    xhttp.open("GET", "/");
+    xhttp.open("POST", "/");
     xhttp.setRequestHeader("Flynn-Tag", "PlayerJoin");
     xhttp.setRequestHeader("Pragma", "no-cache");
     xhttp.setRequestHeader("Expires", "-1");

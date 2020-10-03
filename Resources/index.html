@@ -17,31 +17,112 @@
     <div id="pixi"></div>
     
     <script type="text/javascript">
+        
         app = initPixi()
         
+        // because i always make this mistake!
+        print = console.log
         
-        let animationUpdate = function() {
-            // called 60 times per second
+        // The conversion from board units to screen units
+        const kBoardToScreen = 50
+        const kNodeSize = 20
+        
+        var lastBoardUpdate = {}
+        var lastBoardUpdateCX = 0
+        var lastBoardUpdateCY = 0
+        
+        const boardGfx = new PIXI.Graphics();
+        app.stage.addChild(boardGfx);
+                
+        function animationUpdate() {
+            // 0. Did the screen change size since the last time we drew the board? if so, we
+            // should redraw it so that it stays centered
+            let cx = app.renderer.width / 2
+            let cy = app.renderer.height / 2
+            
+            if (lastBoardUpdateCX != cx || lastBoardUpdateCY != cy) {
+                updateBoard(lastBoardUpdate);
+            }
         }
         
-        let loadBoard = function(board) {
-            // called 60 times per second
+        function getNextNode(nodes, current, idx) {
+            let nextIdx = current.c[idx];
+            if (nextIdx != undefined) {
+                // we've can't just use nextIdx to index the array because we are not
+                // given ALL of the nodes
+                for (i in nodes) {
+                    let node = nodes[i]
+                    if (node.id == nextIdx) {
+                        return node;
+                    }
+                }
+            }
+            return undefined;
+        }
+        
+        function getNodePos(node, cx, cy) {
+            return [node.x * kBoardToScreen + cx, node.y * kBoardToScreen + cy]
+        }
+        
+        function updateBoard(board) {
+            let cx = app.renderer.width / 2
+            let cy = app.renderer.height / 2
+            
+            lastBoardUpdate = board;
+            lastBoardUpdateCX = cx;
+            lastBoardUpdateCY = cy;
+            
+            // -1. we want to center the board around the player's nodeidx
+            let nodes = board.nodes;
+            
+            let player = board.player;
+            if (player != undefined) {
+                let node = nodes[player.nodeIdx];
+                cx -= node.x * kBoardToScreen;
+                cy -= node.y * kBoardToScreen;
+            }
+            
+            boardGfx.clear()
+            
+            // 0. draw all of the lines connecting the nodes
+            boardGfx.lineStyle(5, 0x373737, 1);
+            for (i in nodes) {
+                let node = nodes[i];
+                let posA = getNodePos(node, cx, cy);
+                
+                for (j in node.c) {
+                    let nextNode = getNextNode(nodes, node, j);
+                    if (nextNode != undefined) {
+                        let posB = getNodePos(nextNode, cx, cy);
+                        boardGfx.moveTo(posA[0], posA[1]);
+                        boardGfx.lineTo(posB[0], posB[1]);
+                    }
+                }
+            }
+            
+            // 1. draw all of the nodes
+            boardGfx.lineStyle(0);
+            for (i in nodes) {
+                let node = nodes[i];
+                boardGfx.beginFill(0xbdbdbd, 1);
+                let pos = getNodePos(node, cx, cy);
+                boardGfx.drawCircle(pos[0], pos[1], kNodeSize);
+                boardGfx.endFill();
+            }
         }
         
         gameUpdateLongPoll(function (info) {
-            console.log(info)
-            
             if (info.tag == "BoardUpdate") {
-                
+                updateBoard(info)
             }
             if (info.tag == "PlayerInfo") {
-                
+                print(info)
             }
         })
         
         
         registerPlayer("George", function (info) {
-            console.log(info)
+            print(info)
         })
         
         
