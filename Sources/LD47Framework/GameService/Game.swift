@@ -60,40 +60,44 @@ class Game {
         return PlayerInfo(player: player)
     }
 
+    func getBoardUpdate(_ playerNode: Node, _ visWidth: Int, _ visHeight: Int) -> BoardUpdate? {
+        // 1. only include nodes and players which are visible to this player
+        var visNodes: [Node] = []
+        var visPlayers: [Player] = []
+
+        nodesNear(playerNode.x, playerNode.y, visWidth/2, visHeight/2, &visNodes)
+
+        // 2. run back through the nodes, add any nodes which are connected to a visNode
+        for node in visNodes {
+            for neighborIdx in node.c {
+                let neighbor = nodes[neighborIdx]
+                if visNodes.contains(neighbor) == false {
+                    visNodes.append(neighbor)
+                }
+            }
+        }
+
+        // add players who are visible
+        for otherPlayer in players.values {
+            let otherPlayerNode = nodes[otherPlayer.nodeIdx]
+            if  abs(otherPlayerNode.x - playerNode.x) < visWidth &&
+                abs(otherPlayerNode.y - playerNode.y) < visHeight {
+                visPlayers.append(otherPlayer)
+            }
+        }
+
+        return BoardUpdate(nodes: visNodes, players: visPlayers, player: nil)
+    }
+
     func getBoardUpdate(_ playerID: String, _ visWidth: Int, _ visHeight: Int) -> BoardUpdate? {
         // 0. find the player's node
         if let player = players[playerID] {
-            let playerNode = nodes[player.nodeIdx]
-
-            // 1. only include nodes and players which are visible to this player
-            var visNodes: [Node] = []
-            var visPlayers: [Player] = []
-
-            nodesNear(playerNode.x, playerNode.y, visWidth/2, visHeight/2, &visNodes)
-
-            // 2. run back through the nodes, add any nodes which are connected to a visNode
-            for node in visNodes {
-                for neighborIdx in node.c {
-                    let neighbor = nodes[neighborIdx]
-                    if visNodes.contains(neighbor) == false {
-                        visNodes.append(neighbor)
-                    }
-                }
+            if var update = getBoardUpdate(nodes[player.nodeIdx], visWidth, visHeight) {
+                update.player = player
+                return update
             }
-
-            // add players who are visible
-            for otherPlayer in players.values {
-                let otherPlayerNode = nodes[otherPlayer.nodeIdx]
-                if  abs(otherPlayerNode.x - playerNode.x) < visWidth &&
-                    abs(otherPlayerNode.y - playerNode.y) < visHeight {
-                    visPlayers.append(otherPlayer)
-                }
-            }
-
-            return BoardUpdate(nodes: visNodes, players: visPlayers, player: player)
         }
-
-        return nil
+        return getBoardUpdate(nodes[0], visWidth, visHeight)
     }
 
     func movePlayer(_ playerID: String, _ nodeIdx: Int, _ visWidth: Int, _ visHeight: Int) -> BoardUpdate? {

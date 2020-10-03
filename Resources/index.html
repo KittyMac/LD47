@@ -16,6 +16,48 @@
 <body>
     <div id="pixi"></div>
     
+	<div id="welcomeDialog">
+        
+        <div class="vstack">
+            <div class="center" style="height:60px; width:100%">
+                <h3>QuantumLoop</h3>
+            </div>
+            <div class="hstack">
+                <div class="vstack center" style="width:50%">
+                    <input id="playerName" type="text" placeholder="Player Name" required="true">
+                    
+                    <div class="hstack center grow" style="width:73%">
+                        <div style="width:92px;height:92px;background-color:#FF0000"></div>
+                        <div style="width:92px;height:92px;background-color:#00FF00"></div>
+                        <div style="width:92px;height:92px;background-color:#0000FF"></div>
+                        <div style="width:92px;height:92px;background-color:#FFFF00"></div>
+                    </div>
+                    
+                    <button id="playButton">PLAY</button>
+                    
+                </div>
+                <div class="vstack" style="width:50%">
+                    <ul>
+                        <li><strong>Enter Name</strong>
+                        <li><strong>Select Team</strong>
+                        <li><strong>Press Play</strong>
+                    </ul>
+                                            
+                    <ul>
+                        <li>5 pts for landing on another player
+                        <li>150 pts for escaping the loop
+                    </ul>
+                    <ul>
+                        <li>Game resets when a team scores 100,000 points
+                        <li>Remain still for 10 seconds to scan for information of where the exit is
+                    </ul>
+                                        
+                </div>
+            </div>
+        </div>
+        
+	</div>
+    
     <script type="text/javascript">
         
         app = initPixi()
@@ -32,9 +74,9 @@
         //const kNodeSize = 4
         //const kPlayerSize = 7
         
-        var lastBoardUpdate = {}
-        var lastBoardUpdateCX = 0
-        var lastBoardUpdateCY = 0
+        var lastBoardUpdate = undefined;
+        var lastBoardUpdateCX = 0;
+        var lastBoardUpdateCY = 0;
         
         var playerCanMove = false;
         
@@ -63,30 +105,46 @@
             }
             
             // 1. rotate all players
+            var hasPlayer = false;
             for (j in playersContainer.children) {
-                let playerGfx = playersContainer.children[j];
+                let playerContainer = playersContainer.children[j];
                 
-                playerGfx.x += (playerGfx.targetX - playerGfx.x) * 0.06135;
-                playerGfx.y += (playerGfx.targetY - playerGfx.y) * 0.06135;
+                playerContainer.x += (playerContainer.targetX - playerContainer.x) * 0.06135;
+                playerContainer.y += (playerContainer.targetY - playerContainer.y) * 0.06135;
                 
-                let dx = Math.abs(playerGfx.targetX - playerGfx.x);
-                let dy = Math.abs(playerGfx.targetY - playerGfx.y);
+                let dx = Math.abs(playerContainer.targetX - playerContainer.x);
+                let dy = Math.abs(playerContainer.targetY - playerContainer.y);
                 
                 var distanceToMove = (dx + dy) * 0.5;
                 
+                var playerGfx = playerContainer.children[0];
                 playerGfx.rotation += 0.01 * (1.0 + distanceToMove * 0.1);
                 
-                
-                
-                if (dx < kNodeSize && dy < kNodeSize) {
-                    playerCanMove = true;
-                } else {
-                    playerCanMove = false;
+                if (playerContainer.isPlayer) {
+                    hasPlayer = true;
+                    
+                    gameContainer.x = -(playerContainer.x - app.renderer.width / 2)
+                    gameContainer.y = -(playerContainer.y - app.renderer.height / 2)
+                    
+                    if (dx < kNodeSize && dy < kNodeSize) {
+                        playerCanMove = true;
+                    } else {
+                        playerCanMove = false;
+                    }
                 }
-                
-                if (playerGfx.isPlayer) {
-                    gameContainer.x = -(playerGfx.x - app.renderer.width / 2)
-                    gameContainer.y = -(playerGfx.y - app.renderer.height / 2)
+            }
+            
+            if (hasPlayer == false) {
+                // first find any player and center on them
+                if (playersContainer.children.length > 0) {
+                    let playerContainer = playersContainer.children[0];
+                    gameContainer.x = -(playerContainer.x - app.renderer.width / 2)
+                    gameContainer.y = -(playerContainer.y - app.renderer.height / 2)
+                } else {
+                    let node = {x:10000, y:10000}
+                    let pos = getNodePos(node);
+                    gameContainer.x = -(pos[0] - app.renderer.width / 2)
+                    gameContainer.y = -(pos[1] - app.renderer.height / 2)
                 }
             }
         }
@@ -116,7 +174,11 @@
             return [node.x * kBoardToScreen, node.y * kBoardToScreen]
         }
         
-        function updateBoard(board) {            
+        function updateBoard(board) {
+            if (board == undefined) {
+                return;
+            }
+            
             lastBoardUpdate = board;            
             lastBoardUpdateCX = app.renderer.width;
             lastBoardUpdateCY = app.renderer.height;
@@ -155,44 +217,6 @@
             
             let thisPlayer = board.player;
             
-            // 2. add the players
-            for (i in players) {
-                let player = players[i];
-                let node = getNodeByIdx(nodes, player.nodeIdx);
-                if (node != undefined) {
-                    // does a graphics already exist for this one?
-                    var playerGfx = undefined;
-                    for (j in playersContainer.children) {
-                        let otherPlayerGfx = playersContainer.children[j];
-                        if (otherPlayerGfx.playerID == player.id) {
-                            playerGfx = otherPlayerGfx;
-                            break;
-                        }
-                    }
-                
-                    if (playerGfx == undefined) {
-                        playerGfx = new PIXI.Graphics();
-                        playersContainer.addChild(playerGfx);
-                    
-                        playerGfx.playerID = player.id;
-                    
-                        playerGfx.beginFill(0xff0000, 1);
-                        playerGfx.drawStar(0, 0, 4, kPlayerSize);
-                        playerGfx.endFill();
-                        
-                        let pos = getNodePos(node);
-                        playerGfx.x = pos[0];
-                        playerGfx.y = pos[1];
-                    }
-                
-                    let pos = getNodePos(node);
-                    playerGfx.targetX = pos[0];
-                    playerGfx.targetY = pos[1];
-                    
-                    playerGfx.isPlayer = (thisPlayer.id == player.id);
-                }
-            }
-            
             // 3. special stuff for THE player
             if (thisPlayer != undefined) {
                 let playerNode = getNodeByIdx(nodes, thisPlayer.nodeIdx);
@@ -200,6 +224,57 @@
                 nodeText.x = pos[0];
                 nodeText.y = pos[1] + kNodeSize * 2.5;
                 nodeText.text = playerNode.d;
+            }
+            
+            // 2. add the players
+            for (i in players) {
+                let player = players[i];
+                let node = getNodeByIdx(nodes, player.nodeIdx);
+                if (node != undefined) {
+                    // does a graphics already exist for this one?
+                    var playerContainer = undefined;
+                    for (j in playersContainer.children) {
+                        let otherPlayerContainer = playersContainer.children[j];
+                        if (otherPlayerContainer.playerID == player.id) {
+                            playerContainer = otherPlayerContainer;
+                            break;
+                        }
+                    }
+                
+                    if (playerContainer == undefined) {
+                        playerContainer = new PIXI.Container();
+                        playersContainer.addChild(playerContainer);
+                        
+                        playerGfx = new PIXI.Graphics();
+                        playerContainer.addChild(playerGfx);
+                        
+                        const nodeText = new PIXI.Text(player.name, {fontFamily : 'Helvetica', fontSize: 18, fill : 0xffffff, align : 'center'});
+                        nodeText.anchor.set(0.5, 0.5);
+                        nodeText.y = kNodeSize * -2.0;
+                        playerContainer.addChild(nodeText);
+                        
+                        playerContainer.playerID = player.id;
+                    
+                        playerGfx.beginFill(0xff0000, 1);
+                        playerGfx.drawStar(0, 0, 4, kPlayerSize);
+                        playerGfx.endFill();
+                        
+                        let pos = getNodePos(node);
+                        playerContainer.x = pos[0];
+                        playerContainer.y = pos[1];
+                    }
+                
+                    let pos = getNodePos(node);
+                    playerContainer.targetX = pos[0];
+                    playerContainer.targetY = pos[1];
+                    
+                    playerContainer.isPlayer = (thisPlayer.id == player.id);
+                }
+            }
+            
+            // Display the welcome dialog
+            if (thisPlayer != undefined) {
+                closeWelcomeDialog();
             }
         }
         
@@ -212,10 +287,41 @@
             }
         })
         
-        // TODO: let the player name themselves and choose when to join the game
-        registerPlayer("George", function (info) {
-            print(info)
-        })
+        welcomeDialog.closed = true;
+        function openWelcomeDialog() {
+            if (welcomeDialog.closed == true) {
+                welcomeDialog.closed = false;
+                welcomeDialog.style["pointer-events"] = "auto";
+                Laba.animate(welcomeDialog, "!f1");
+            }
+        }
+        
+        function closeWelcomeDialog() {
+            if (welcomeDialog.closed == false) {
+                welcomeDialog.closed = true;
+                Laba.animate(welcomeDialog, "!f0", undefined, function() {
+                    welcomeDialog.style["pointer-events"] = "none";
+                });
+            }
+        }
+        
+        openWelcomeDialog();
+        
+		playButton.addEventListener('click', function() {
+            registerPlayer(playerName.value, function (info) {
+                if (info.tag == "PlayerInfo") {
+                    closeWelcomeDialog();
+                }
+            })
+		})
+        
+		playerName.addEventListener("keyup", function(event) {
+			if (event.keyCode === 13) {
+				event.preventDefault();
+                playButton.click();
+			}
+		});
+                
         
         function onPointerDown(event) {
             if (playerCanMove == false) {

@@ -14,5 +14,31 @@ class Player: Codable {
     init(_ id: String, _ name: String) {
         self.id = id
         self.name = name
+
+        if name.count <= 0 {
+            let randomNames = [
+                "Sulley",
+                "Jesse",
+                "Leonidas",
+                "Edward",
+                "Theo",
+                "Kirk",
+                "Elizabeth",
+                "Ben",
+                "Gopnik",
+                "Richard",
+                "Kowalski",
+                "Wilson",
+                "Shaun",
+                "Kym",
+                "Penny",
+                "Nick",
+                "Vincent"
+            ]
+
+            if let randomName = randomNames.randomElement() {
+                self.name = randomName
+            }
+        }
     }
 }

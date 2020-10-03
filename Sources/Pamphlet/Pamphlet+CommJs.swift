@@ -32,7 +32,10 @@ function gameUpdateLongPoll(callback) {
     xhttp.onreadystatechange = function() {
         if (this.readyState == 4) {
             if (this.status == 200) {
-                callback(JSON.parse(this.responseText));
+                let responseJson = JSON.parse(this.responseText);
+                if (responseJson != undefined) {
+                    callback(responseJson);
+                }
                 setTimeout(function() { gameUpdateLongPoll(callback) }, 1);
             } else {
                 setTimeout(function() { gameUpdateLongPoll(callback) }, 1000);
@@ -59,7 +62,12 @@ function sendCommand(commandName, commandJson, callback) {
     xhttp.onreadystatechange = function() {
         if (this.readyState == 4) {
             if (this.status == 200) {
-                callback(JSON.parse(this.responseText));
+                if (callback != undefined) {
+                    let responseJson = JSON.parse(this.responseText);
+                    if (responseJson != undefined) {
+                        callback(responseJson);
+                    }
+                }
             }
         }
     };
@@ -95,4 +103,4 @@ public extension Pamphlet {
     }
 }
 
-private let gzip_data = Data(base64Encoded:"H4sIAAAAAAACA+VTW2+bMBR+z6+weCISJOm0hylVXhat66JeooVKe/XgBLyaY892mqCJ/z6bSwu0GtqkvbR+ABm+y/E5n/cHjA0TSFKaw51MqIErgelWcO7HlPPvNL6fkl/Erol7PFBFTpkxkqwIwpF8u766tLuv8PMA2vjT8wpVIWYCFdCk0MaKxhnFFCxp3xj6VrXCusX2xDcZ07OKsHMEslqR911MD+c0D9ph3i0WQ5Rbbe3+Znd7M5NUaWgdtBSoIYKTmTbldpcGE7EcxMH43VL/3J8yIGcDrZIA1/BCZf9ssLAnHXj0dpP+57I3Cgnoe9vbXeQFxJt7vTnZipr5Xdr2g/K9C14ghhFNHfozmI+CqmSMtFU0zaljoAhjGmcwxvh0kszOw1HCszHw2imGa4FGCf43Lo4CaMKokOB4VErOYuoaP/+hBZ7bbNp4mNVddBF+aNWqBwdDYpHnFBMb3adZHpfEqtgsoXUANTuyxGRkTu6rRkViFysADB7x2QCfAUsz84zwfG7aMuoIa6MYpmxf+E1BLrzlZNJmiDjouv7VQm5spIL2ABt71IB07vTrv8/lf7oSnfa+qTsxmkmXsWEuFaRMG1BbTgtrjXUmBzHshterkRvB0Jb2FAVZfXZNXzqReqIdqZ5rLh6gdRQJfElOI6bXj4SeaUNeNu8XTH8DjN3a4EIHAAA=")
+private let gzip_data = Data(base64Encoded:"H4sIAAAAAAACA+VUTW+bQBC9+1dMOWHJ2E7VQ+WIS62mqZUPqyZSr1sYwzawS3fXsVHFf+8shgSwWzdpL1X3YIvlvXnDzJtZb0RouBQQswzv8ogZvJIiXso0dUOWpl9YeD+E70BnYH8emIJdYkwOPgjcwufrq0t6+oTfNqiNOzyvUBViLIVCFhXaUNAwYSJGIq1rQZeiVlh7+Bpck3A9rggrSwDfhzdtTAdnY260xbyeTvsoe1I0oFDnUmhcaPo+Hxar25txzpTGRmv/OsCdqfPua3UivPJhIyJcc4HRMUl7mpJ1mEeClwc3Gk3AM5Qb47ZL9Ou+lCM460UvAVONR9J7scCUKtzT6DwNutdlxwI5CtdZ3q4CZwTOxOn4gzKqfXNJbUflOhdpIYQXsNiiP6B5J5mKTpGWisUZswwhvZCFCZ5ivN/lnBpkKd7ZKfDcRvTmUhgl0+eoWAoK4wVFjpbH8jzlIbOFn3wlW5zTTJAZjX8XXHhvm2iDxr2hzDImIjLuUy+3M6Ao5FzyoUI13vLIJDCB+6pQgVyFClGMHvFJD58gjxNzQDjsmyaGWw2MNoqLmK8Lt05oSImWg0HjIbDQ+f5VA7khS42aD7ATMILWLvmn9ohFNrn/1gb488Xz4uXznAV0fAmVPxnzvzvZLZf8V6N9crSqXvXGS2HMtUG1TFlB0mI/Wr1pas+gs0cuJBeU2pNT8uraFn1mg+w72grVUc3kAzaKMsKP0e6E6PUjoSNak2f1/xHRH6/FV1WBCAAA")

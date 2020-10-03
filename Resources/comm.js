@@ -3,7 +3,10 @@ function gameUpdateLongPoll(callback) {
     xhttp.onreadystatechange = function() {
         if (this.readyState == 4) {
             if (this.status == 200) {
-                callback(JSON.parse(this.responseText));
+                let responseJson = JSON.parse(this.responseText);
+                if (responseJson != undefined) {
+                    callback(responseJson);
+                }
                 setTimeout(function() { gameUpdateLongPoll(callback) }, 1);
             } else {
                 setTimeout(function() { gameUpdateLongPoll(callback) }, 1000);
@@ -30,7 +33,12 @@ function sendCommand(commandName, commandJson, callback) {
     xhttp.onreadystatechange = function() {
         if (this.readyState == 4) {
             if (this.status == 200) {
-                callback(JSON.parse(this.responseText));
+                if (callback != undefined) {
+                    let responseJson = JSON.parse(this.responseText);
+                    if (responseJson != undefined) {
+                        callback(responseJson);
+                    }
+                }
             }
         }
     };

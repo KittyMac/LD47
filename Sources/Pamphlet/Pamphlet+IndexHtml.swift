@@ -45,6 +45,48 @@ return ###"""
 <body>
     <div id="pixi"></div>
     
+	<div id="welcomeDialog">
+        
+        <div class="vstack">
+            <div class="center" style="height:60px; width:100%">
+                <h3>QuantumLoop</h3>
+            </div>
+            <div class="hstack">
+                <div class="vstack center" style="width:50%">
+                    <input id="playerName" type="text" placeholder="Player Name" required="true">
+                    
+                    <div class="hstack center grow" style="width:73%">
+                        <div style="width:92px;height:92px;background-color:#FF0000"></div>
+                        <div style="width:92px;height:92px;background-color:#00FF00"></div>
+                        <div style="width:92px;height:92px;background-color:#0000FF"></div>
+                        <div style="width:92px;height:92px;background-color:#FFFF00"></div>
+                    </div>
+                    
+                    <button id="playButton">PLAY</button>
+                    
+                </div>
+                <div class="vstack" style="width:50%">
+                    <ul>
+                        <li><strong>Enter Name</strong>
+                        <li><strong>Select Team</strong>
+                        <li><strong>Press Play</strong>
+                    </ul>
+                                            
+                    <ul>
+                        <li>5 pts for landing on another player
+                        <li>150 pts for escaping the loop
+                    </ul>
+                    <ul>
+                        <li>Game resets when a team scores 100,000 points
+                        <li>Remain still for 10 seconds to scan for information of where the exit is
+                    </ul>
+                                        
+                </div>
+            </div>
+        </div>
+        
+	</div>
+    
     <script type="text/javascript">
         
         app = initPixi()
@@ -61,11 +103,10 @@ return ###"""
         //const kNodeSize = 4
         //const kPlayerSize = 7
         
-        var lastBoardUpdate = {}
-        var lastBoardUpdateCX = 0
-        var lastBoardUpdateCY = 0
+        var lastBoardUpdate = undefined;
+        var lastBoardUpdateCX = 0;
+        var lastBoardUpdateCY = 0;
         
-        var animationCount = 0;
         var playerCanMove = false;
         
         const gameContainer = new PIXI.Container();
@@ -82,7 +123,6 @@ return ###"""
         gameContainer.addChild(playersContainer);
                 
         function animationUpdate() {
-            animationCount += 0.1;
             
             // 0. Did the screen change size since the last time we drew the board? if so, we
             // should redraw it so that it stays centered
@@ -94,23 +134,46 @@ return ###"""
             }
             
             // 1. rotate all players
+            var hasPlayer = false;
             for (j in playersContainer.children) {
-                let playerGfx = playersContainer.children[j];
-                playerGfx.rotation = animationCount * 0.1;
+                let playerContainer = playersContainer.children[j];
                 
-                playerGfx.x += (playerGfx.targetX - playerGfx.x) * 0.06135;
-                playerGfx.y += (playerGfx.targetY - playerGfx.y) * 0.06135;
+                playerContainer.x += (playerContainer.targetX - playerContainer.x) * 0.06135;
+                playerContainer.y += (playerContainer.targetY - playerContainer.y) * 0.06135;
                 
-                if (Math.abs(playerGfx.targetX - playerGfx.x) < kNodeSize &&
-                    Math.abs(playerGfx.targetY - playerGfx.y) < kNodeSize) {
-                    playerCanMove = true;
-                } else {
-                    playerCanMove = false;
+                let dx = Math.abs(playerContainer.targetX - playerContainer.x);
+                let dy = Math.abs(playerContainer.targetY - playerContainer.y);
+                
+                var distanceToMove = (dx + dy) * 0.5;
+                
+                var playerGfx = playerContainer.children[0];
+                playerGfx.rotation += 0.01 * (1.0 + distanceToMove * 0.1);
+                
+                if (playerContainer.isPlayer) {
+                    hasPlayer = true;
+                    
+                    gameContainer.x = -(playerContainer.x - app.renderer.width / 2)
+                    gameContainer.y = -(playerContainer.y - app.renderer.height / 2)
+                    
+                    if (dx < kNodeSize && dy < kNodeSize) {
+                        playerCanMove = true;
+                    } else {
+                        playerCanMove = false;
+                    }
                 }
-                
-                if (playerGfx.isPlayer) {
-                    gameContainer.x = -(playerGfx.x - app.renderer.width / 2)
-                    gameContainer.y = -(playerGfx.y - app.renderer.height / 2)
+            }
+            
+            if (hasPlayer == false) {
+                // first find any player and center on them
+                if (playersContainer.children.length > 0) {
+                    let playerContainer = playersContainer.children[0];
+                    gameContainer.x = -(playerContainer.x - app.renderer.width / 2)
+                    gameContainer.y = -(playerContainer.y - app.renderer.height / 2)
+                } else {
+                    let node = {x:10000, y:10000}
+                    let pos = getNodePos(node);
+                    gameContainer.x = -(pos[0] - app.renderer.width / 2)
+                    gameContainer.y = -(pos[1] - app.renderer.height / 2)
                 }
             }
         }
@@ -141,6 +204,10 @@ return ###"""
         }
         
         function updateBoard(board) {
+            if (board == undefined) {
+                return;
+            }
+            
             lastBoardUpdate = board;
             lastBoardUpdateCX = app.renderer.width;
             lastBoardUpdateCY = app.renderer.height;
@@ -179,44 +246,6 @@ return ###"""
             
             let thisPlayer = board.player;
             
-            // 2. add the players
-            for (i in players) {
-                let player = players[i];
-                let node = getNodeByIdx(nodes, player.nodeIdx);
-                if (node != undefined) {
-                    // does a graphics already exist for this one?
-                    var playerGfx = undefined;
-                    for (j in playersContainer.children) {
-                        let otherPlayerGfx = playersContainer.children[j];
-                        if (otherPlayerGfx.playerID == player.id) {
-                            playerGfx = otherPlayerGfx;
-                            break;
-                        }
-                    }
-                
-                    if (playerGfx == undefined) {
-                        playerGfx = new PIXI.Graphics();
-                        playersContainer.addChild(playerGfx);
-                    
-                        playerGfx.playerID = player.id;
-                    
-                        playerGfx.beginFill(0xff0000, 1);
-                        playerGfx.drawStar(0, 0, 4, kPlayerSize);
-                        playerGfx.endFill();
-                        
-                        let pos = getNodePos(node);
-                        playerGfx.x = pos[0];
-                        playerGfx.y = pos[1];
-                    }
-                
-                    let pos = getNodePos(node);
-                    playerGfx.targetX = pos[0];
-                    playerGfx.targetY = pos[1];
-                    
-                    playerGfx.isPlayer = (thisPlayer.id == player.id);
-                }
-            }
-            
             // 3. special stuff for THE player
             if (thisPlayer != undefined) {
                 let playerNode = getNodeByIdx(nodes, thisPlayer.nodeIdx);
@@ -224,6 +253,57 @@ return ###"""
                 nodeText.x = pos[0];
                 nodeText.y = pos[1] + kNodeSize * 2.5;
                 nodeText.text = playerNode.d;
+            }
+            
+            // 2. add the players
+            for (i in players) {
+                let player = players[i];
+                let node = getNodeByIdx(nodes, player.nodeIdx);
+                if (node != undefined) {
+                    // does a graphics already exist for this one?
+                    var playerContainer = undefined;
+                    for (j in playersContainer.children) {
+                        let otherPlayerContainer = playersContainer.children[j];
+                        if (otherPlayerContainer.playerID == player.id) {
+                            playerContainer = otherPlayerContainer;
+                            break;
+                        }
+                    }
+                
+                    if (playerContainer == undefined) {
+                        playerContainer = new PIXI.Container();
+                        playersContainer.addChild(playerContainer);
+                        
+                        playerGfx = new PIXI.Graphics();
+                        playerContainer.addChild(playerGfx);
+                        
+                        const nodeText = new PIXI.Text(player.name, {fontFamily : 'Helvetica', fontSize: 18, fill : 0xffffff, align : 'center'});
+                        nodeText.anchor.set(0.5, 0.5);
+                        nodeText.y = kNodeSize * -2.0;
+                        playerContainer.addChild(nodeText);
+                        
+                        playerContainer.playerID = player.id;
+                    
+                        playerGfx.beginFill(0xff0000, 1);
+                        playerGfx.drawStar(0, 0, 4, kPlayerSize);
+                        playerGfx.endFill();
+                        
+                        let pos = getNodePos(node);
+                        playerContainer.x = pos[0];
+                        playerContainer.y = pos[1];
+                    }
+                
+                    let pos = getNodePos(node);
+                    playerContainer.targetX = pos[0];
+                    playerContainer.targetY = pos[1];
+                    
+                    playerContainer.isPlayer = (thisPlayer.id == player.id);
+                }
+            }
+            
+            // Display the welcome dialog
+            if (thisPlayer != undefined) {
+                closeWelcomeDialog();
             }
         }
         
@@ -236,10 +316,41 @@ return ###"""
             }
         })
         
-        // TODO: let the player name themselves and choose when to join the game
-        registerPlayer("George", function (info) {
-            print(info)
-        })
+        welcomeDialog.closed = true;
+        function openWelcomeDialog() {
+            if (welcomeDialog.closed == true) {
+                welcomeDialog.closed = false;
+                welcomeDialog.style["pointer-events"] = "auto";
+                Laba.animate(welcomeDialog, "!f1");
+            }
+        }
+        
+        function closeWelcomeDialog() {
+            if (welcomeDialog.closed == false) {
+                welcomeDialog.closed = true;
+                Laba.animate(welcomeDialog, "!f0", undefined, function() {
+                    welcomeDialog.style["pointer-events"] = "none";
+                });
+            }
+        }
+        
+        openWelcomeDialog();
+        
+		playButton.addEventListener('click', function() {
+            registerPlayer(playerName.value, function (info) {
+                if (info.tag == "PlayerInfo") {
+                    closeWelcomeDialog();
+                }
+            })
+		})
+        
+		playerName.addEventListener("keyup", function(event) {
+			if (event.keyCode === 13) {
+				event.preventDefault();
+                playButton.click();
+			}
+		});
+                
         
         function onPointerDown(event) {
             if (playerCanMove == false) {
@@ -309,4 +420,4 @@ public extension Pamphlet {
     }
 }
 
-private let gzip_data = Data(base64Encoded:"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")
+private let gzip_data = Data(base64Encoded:"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")
