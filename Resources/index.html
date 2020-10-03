@@ -1,0 +1,67 @@
+#define PAMPHLET_PREPROCESSOR
+
+<!doctype html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>LD47</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<script src="laba.js"></script>
+<script src="comm.js"></script>
+<script src="pixi.min.js"></script>
+<script src="pixi.app.js"></script>
+<script src="gl.matrix.min.js"></script>
+
+<body>
+    <div id="pixi"></div>
+    
+    <script type="text/javascript">
+        app = initPixi()
+        
+        
+        let animationUpdate = function() {
+            // called 60 times per second
+        }
+        
+        let loadBoard = function(board) {
+            // called 60 times per second
+        }
+        
+        gameUpdateLongPoll(function (info) {
+            console.log(info)
+            
+            if (info.tag == "BoardUpdate") {
+                
+            }
+            if (info.tag == "PlayerInfo") {
+                
+            }
+        })
+        
+        
+        registerPlayer("George", function (info) {
+            console.log(info)
+        })
+        
+        
+        app.loader
+        //.add("space", "outLogin/space.jpg")
+        //.add("lines", "outLogin/lines.jpg")
+        .load((loader, resources) => {
+            //spaceSprite = makeSprite(app, "space");
+            //linesSprite = makeTilingSprite(app, "lines", 2731, 1024);
+            
+            animationUpdate()
+            app.ticker.add(() => {
+                while(consistentFrameRate(app, 16)) {
+                    animationUpdate()
+                }
+            });
+            
+        });
+                
+    </script>
+    
+</body>
+</html>

@@ -1,0 +1,117 @@
+SWIFT_BUILD_FLAGS=--configuration release
+
+all: fix_bad_header_files build
+	
+fix_bad_header_files:
+	-@find  . -name '._*.h' -exec rm {} \;
+
+build:
+	./meta/CombinedBuildPhases.sh
+	swift build -v $(SWIFT_BUILD_FLAGS)
+
+clean:
+	rm -rf .build
+
+test:
+	swift test -v
+
+update:
+	swift package update
+
+xcode:
+	pamphlet --clean ./Resources/ ./Sources/Pamphlet/ 
+	swift package generate-xcodeproj
+	meta/addBuildPhase LD47.xcodeproj/project.pbxproj "LD47::LD47Framework" 'cd $${SRCROOT}; ./meta/CombinedBuildPhases.sh'
+	
+install-nginx:
+	sudo service nginx stop
+	sudo apt-get update
+	sudo apt-get install nginx
+	sudo apt autoremove
+	sudo rm -f /etc/nginx/sites-enabled/default
+	sudo cp meta/nginx_ld47 /etc/nginx/sites-enabled/nginx_ld47
+	sudo service nginx start
+
+install-http: update build
+	-sudo systemctl stop ld47_http	
+	sudo cp meta/ld47_http.service /etc/systemd/system/ld47_http.service
+	sudo systemctl start ld47_http
+	sudo systemctl enable ld47_http
+	sudo systemctl daemon-reload
+
+install-game: update build
+	-sudo systemctl stop ld47_game
+	sudo cp meta/ld47_game.service /etc/systemd/system/ld47_game.service
+	sudo systemctl start ld47_game
+	sudo systemctl enable ld47_game
+	sudo systemctl daemon-reload
+
+test-http: build
+	.build/release/LD47 http
+
+test-game: build
+	.build/release/LD47 game 127.0.0.1:9090
+
+
+
+update-nginx:
+	echo "update nginx not yet implemented"
+
+update-http1:
+	ssh ubuntu@192.168.1.211 "cd LD47; git checkout .; git pull; make install-http"
+
+update-http2:
+	ssh ubuntu@192.168.1.212 "cd LD47; git checkout .; git pull; make install-http"
+
+update-game1:
+	ssh ubuntu@192.168.1.213 "cd LD47; git checkout .; git pull; make install-game"
+
+update-http3:
+	ssh ubuntu@192.168.1.214 "cd LD47; git checkout .; git pull; make install-http"
+
+update-http4:
+	ssh ubuntu@192.168.1.215 "cd LD47; git checkout .; git pull; make install-http"
+
+update-cluster: update-nginx update-http1 update-http2 update-game1 update-http3 update-http4
+
+
+
+restart-nginx:
+	echo "restart nginx not yet implemented"
+
+restart-http1:
+	ssh ubuntu@192.168.1.211 "sudo systemctl restart ld47_http"
+
+restart-http2:
+	ssh ubuntu@192.168.1.212 "sudo systemctl restart ld47_http"
+
+restart-game:
+	ssh ubuntu@192.168.1.213 "sudo systemctl restart ld47_game"
+
+restart-http3:
+	ssh ubuntu@192.168.1.214 "sudo systemctl restart ld47_http"
+
+restart-http4:
+	ssh ubuntu@192.168.1.215 "sudo systemctl restart ld47_http"
+
+restart-cluster: restart-nginx restart-http1 restart-http2 restart-game1 restart-http3 restart-http4
+
+
+status-nginx:
+	echo "restart nginx not yet implemented"
+
+status-http1:
+	ssh ubuntu@192.168.1.211 "sudo systemctl status -n 3000 ld47_http"
+
+status-http2:
+	ssh ubuntu@192.168.1.212 "sudo systemctl status -n 3000 ld47_http"
+
+status-game1:
+	ssh ubuntu@192.168.1.213 "sudo systemctl status -n 3000 ld47_game"
+
+status-http3:
+	ssh ubuntu@192.168.1.214 "sudo systemctl status -n 3000 ld47_http"
+
+status-http4:
+	ssh ubuntu@192.168.1.215 "sudo systemctl status -n 3000 ld47_http"
+
