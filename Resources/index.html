@@ -26,15 +26,23 @@
         // The conversion from board units to screen units
         const kBoardToScreen = 50
         const kNodeSize = 20
+        const kPlayerSize = 35
         
         var lastBoardUpdate = {}
         var lastBoardUpdateCX = 0
         var lastBoardUpdateCY = 0
         
+        var animationCount = 0;
+        
         const boardGfx = new PIXI.Graphics();
         app.stage.addChild(boardGfx);
+        
+        const playersContainer = new PIXI.Container();
+        app.stage.addChild(playersContainer);
                 
         function animationUpdate() {
+            animationCount += 0.1;
+            
             // 0. Did the screen change size since the last time we drew the board? if so, we
             // should redraw it so that it stays centered
             let cx = app.renderer.width / 2
@@ -43,19 +51,31 @@
             if (lastBoardUpdateCX != cx || lastBoardUpdateCY != cy) {
                 updateBoard(lastBoardUpdate);
             }
+            
+            // 1. rotate all players
+            for (j in playersContainer.children) {
+                let playerGfx = playersContainer.children[j];
+                playerGfx.rotation = animationCount * 0.1;
+            }
+        }
+        
+        
+        function getNodeByIdx(nodes, idx) {
+            // we've can't just use nextIdx to index the array because we are not
+            // given ALL of the nodes
+            for (i in nodes) {
+                let node = nodes[i]
+                if (node.id == idx) {
+                    return node;
+                }
+            }
+            return undefined;
         }
         
         function getNextNode(nodes, current, idx) {
             let nextIdx = current.c[idx];
             if (nextIdx != undefined) {
-                // we've can't just use nextIdx to index the array because we are not
-                // given ALL of the nodes
-                for (i in nodes) {
-                    let node = nodes[i]
-                    if (node.id == nextIdx) {
-                        return node;
-                    }
-                }
+                return getNodeByIdx(nodes, nextIdx);
             }
             return undefined;
         }
@@ -74,12 +94,15 @@
             
             // -1. we want to center the board around the player's nodeidx
             let nodes = board.nodes;
+            let players = board.players;
             
             let player = board.player;
             if (player != undefined) {
-                let node = nodes[player.nodeIdx];
-                cx -= node.x * kBoardToScreen;
-                cy -= node.y * kBoardToScreen;
+                let node = getNodeByIdx(nodes, player.nodeIdx);
+                if (node != undefined) {
+                    cx -= node.x * kBoardToScreen;
+                    cy -= node.y * kBoardToScreen;
+                }
             }
             
             boardGfx.clear()
@@ -108,6 +131,38 @@
                 let pos = getNodePos(node, cx, cy);
                 boardGfx.drawCircle(pos[0], pos[1], kNodeSize);
                 boardGfx.endFill();
+            }
+            
+            // 2. add the players
+            for (i in players) {
+                let player = players[i];
+                let node = getNodeByIdx(nodes, player.nodeIdx);
+                
+                // does a graphics already exist for this one?
+                var playerGfx = undefined;
+                for (j in playersContainer.children) {
+                    let otherPlayerGfx = playersContainer.children[j];
+                    if (otherPlayerGfx.playerID == player.id) {
+                        playerGfx = otherPlayerGfx;
+                        break;
+                    }
+                }
+                
+                if (playerGfx == undefined) {
+                    playerGfx = new PIXI.Graphics();
+                    playersContainer.addChild(playerGfx);
+                    
+                    playerGfx.playerID = player.id;
+                    
+                    playerGfx.beginFill(0xff0000, 1);
+                    playerGfx.drawStar(0, 0, 4, kPlayerSize);
+                    playerGfx.endFill();
+                }
+                
+                let pos = getNodePos(node, cx, cy);
+                playerGfx.x = pos[0];
+                playerGfx.y = pos[1];
+                
             }
         }
         
