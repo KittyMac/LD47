@@ -318,6 +318,12 @@
                     
                     playerContainer.isPlayer = (thisPlayer != undefined && thisPlayer.id == player.id);
                     
+                    if (player.immune) {
+                        playerContainer.alpha = 0.6
+                    } else {
+                        playerContainer.alpha = 1.0
+                    }
+                    
                     playerContainer.shouldBeRemoved = false;
                 }
             }

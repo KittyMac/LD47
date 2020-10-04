@@ -13,7 +13,7 @@ class GameService: RemoteActor {
 
     override func safeInit() {
 #if DEBUG
-        game = Game(42, 50, 4)
+        game = Game(42, 50, 20)
 #else
         game = Game(42, 10000, 150)
 #endif
@@ -25,7 +25,7 @@ class GameService: RemoteActor {
                                _ returnCallback: @escaping (String) -> Void) {
 
         if let game = game {
-            game.beAddPlayer(playerID, teamId, playerName, Flynn.any) {
+            game.beAddPlayer(playerID, teamId, playerName, false, Flynn.any) {
                 returnCallback((try? $0.json()) ?? "")
             }
         } else {

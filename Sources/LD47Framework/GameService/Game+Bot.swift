@@ -15,7 +15,7 @@ class Bot: Actor {
     private let game: Game
     private var playerName: String
     private var rng: Randomable
-    private let visRange = 70
+    private let visRange = 65
 
     init(_ game: Game, _ seed: UInt64) {
         self.game = game
@@ -25,13 +25,16 @@ class Bot: Actor {
 
         self.playerName = "\(self)"
 
-        Flynn.Timer(timeInterval: kTransitTime + 0.3, repeats: true, self) { (_) in
-            game.beGetBoardUpdate(self.unsafeUUID, self.visRange, self.visRange, self) { (board) in
-                if let board = board {
-                    if let player = board.player {
-                        self.performTurn(player, board)
-                    } else {
-                        self.joinGame(board)
+        // stagger bot start times to avoid large spikes in activity
+        Flynn.Timer(timeInterval: Double(rng.get(min: 1.0, max: 10.0)), repeats: false, self) { (_) in
+            Flynn.Timer(timeInterval: kTransitTime + 0.3, repeats: true, self) { (_) in
+                game.beGetBoardUpdate(self.unsafeUUID, self.visRange, self.visRange, self) { (board) in
+                    if let board = board {
+                        if let player = board.player {
+                            self.performTurn(player, board)
+                        } else {
+                            self.joinGame(board)
+                        }
                     }
                 }
             }
@@ -47,7 +50,7 @@ class Bot: Actor {
 
     private func joinGame(_ board: BoardUpdate) {
         // TODO: Bots should favor joining the losing teams. Do this by given each team an inverse chance for a ticket in the raffle
-        game.beAddPlayer(unsafeUUID, rng.get(min: 0, max: 3), playerName, self) { (_) in }
+        game.beAddPlayer(unsafeUUID, rng.get(min: 0, max: 3), playerName, true, self) { (_) in }
     }
 
     private func performTurn(_ player: Player, _ board: BoardUpdate) {

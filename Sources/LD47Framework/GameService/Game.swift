@@ -67,7 +67,7 @@ class Game: Actor {
 
     private func getSpawnIdx() -> Int {
         // spawn far enough away from the exit for it to be fun
-        let minSpawnDistance = safeMaxNodeDistance - 3
+        let minSpawnDistance = Int((Float(safeMaxNodeDistance) * 0.80))
         for _ in 0..<200 {
             let node = rng.get(safeNodes)
             if node.d >= minSpawnDistance {
@@ -77,15 +77,20 @@ class Game: Actor {
         return safeNodes.count-1
     }
 
-    private func _beAddPlayer(_ playerID: String, _ teamId: Int, _ playerName: String) -> PlayerInfo {
+    private func _beAddPlayer(_ playerID: String,
+                              _ teamId: Int,
+                              _ playerName: String,
+                              _ isBot: Bool) -> PlayerInfo {
         if let player = safePlayers[playerID] {
             return PlayerInfo(player: player)
         }
-        let player = Player(playerID, teamId, playerName)
+        let player = Player(playerID, teamId, playerName, isBot)
         player.nodeIdx = getSpawnIdx()
 
         let playerNode = safeNodes[player.nodeIdx]
         registerPlayerMove(player, playerNode.d)
+
+        player.immune = true
 
         safePlayers[playerID] = player
         eventPlayerKills[playerID] = []
@@ -118,7 +123,7 @@ class Game: Actor {
         var visNodes: [Int: Node] = [:]
         var visPlayers: [Player] = []
 
-        safeNodesNear(playerNode.x, playerNode.y, visWidth, visHeight, &visNodes)
+        safeNodesNear(playerNode.x, playerNode.y, visWidth/2, visHeight/2, &visNodes)
 
         // 2. run back through the nodes, add any nodes which are connected to a visNode
         for node in visNodes.values {
@@ -130,8 +135,12 @@ class Game: Actor {
         // add players who are visible
         for otherPlayer in safePlayers.values {
             let otherPlayerNode = safeNodes[otherPlayer.nodeIdx]
-            if  abs(otherPlayerNode.x - playerNode.x) < visWidth &&
-                abs(otherPlayerNode.y - playerNode.y) < visHeight {
+
+            // include "immune" players as this will allow players flying across the map
+            // because they found the exit to be visible
+            if  (abs(otherPlayerNode.x - playerNode.x) < visWidth &&
+                abs(otherPlayerNode.y - playerNode.y) < visHeight) ||
+                otherPlayer.immune {
                 visPlayers.append(otherPlayer)
             }
         }
@@ -201,21 +210,24 @@ class Game: Actor {
     private func registerPlayerMove(_ player: Player, _ distance: Int) {
         player.playerDidMove(distance)
 
-        Flynn.Timer(timeInterval: 1.0, repeats: false, self) { (_) in player.updateHint() }
-        Flynn.Timer(timeInterval: 2.0, repeats: false, self) { (_) in player.updateHint() }
-        Flynn.Timer(timeInterval: 3.0, repeats: false, self) { (_) in player.updateHint() }
-        Flynn.Timer(timeInterval: 4.0, repeats: false, self) { (_) in player.updateHint() }
-        Flynn.Timer(timeInterval: 5.0, repeats: false, self) { (_) in player.updateHint() }
-        Flynn.Timer(timeInterval: 6.0, repeats: false, self) { (_) in player.updateHint() }
-        Flynn.Timer(timeInterval: 7.0, repeats: false, self) { (_) in player.updateHint() }
-        Flynn.Timer(timeInterval: 8.0, repeats: false, self) { (_) in player.updateHint() }
+        if player.isBot == false {
+            Flynn.Timer(timeInterval: 1.0, repeats: false, self) { (_) in player.updateHint() }
+            Flynn.Timer(timeInterval: 2.0, repeats: false, self) { (_) in player.updateHint() }
+            Flynn.Timer(timeInterval: 3.0, repeats: false, self) { (_) in player.updateHint() }
+            Flynn.Timer(timeInterval: 4.0, repeats: false, self) { (_) in player.updateHint() }
+            Flynn.Timer(timeInterval: 5.0, repeats: false, self) { (_) in player.updateHint() }
+            Flynn.Timer(timeInterval: 6.0, repeats: false, self) { (_) in player.updateHint() }
+            Flynn.Timer(timeInterval: 7.0, repeats: false, self) { (_) in player.updateHint() }
+            Flynn.Timer(timeInterval: 8.0, repeats: false, self) { (_) in player.updateHint() }
+        }
     }
 
     private func completePlayerTransit(_ player: Player) {
         player.inTransit = false
 
-        // is there another player on this node, not in transit, and a member of another team?
+        // is there another player on this node, not in transit, not immune, and a member of another team?
         for other in safePlayers.values where
+            other.immune == false &&
             other.nodeIdx == player.nodeIdx &&
             other.teamId != player.teamId &&
             other.inTransit == false {
@@ -234,6 +246,8 @@ class Game: Actor {
 
             let playerNode = safeNodes[player.nodeIdx]
             registerPlayerMove(player, playerNode.d)
+
+            player.immune = true
         }
     }
 
@@ -248,10 +262,11 @@ extension Game {
     public func beAddPlayer(_ playerID: String,
                             _ teamId: Int,
                             _ playerName: String,
+                            _ isBot: Bool,
                             _ sender: Actor,
                             _ callback: @escaping ((PlayerInfo) -> Void)) -> Self {
         unsafeSend {
-            let result = self._beAddPlayer(playerID, teamId, playerName)
+            let result = self._beAddPlayer(playerID, teamId, playerName, isBot)
             sender.unsafeSend { callback(result) }
         }
         return self

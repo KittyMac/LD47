@@ -12,16 +12,19 @@ class Player: Codable {
     var teamId: Int = 0
     var nodeIdx: Int = 0
     var inTransit: Bool = false
+    var immune: Bool = true
     var hint: String = ""
 
     // Neat trick: lazy properties are excluded from codable
+    public lazy var isBot: Bool = false
     public lazy var lastMoveTime: TimeInterval = 0.0
     public lazy var distanceToExit: Int = 0
 
-    init(_ id: String, _ teamId: Int, _ name: String) {
+    init(_ id: String, _ teamId: Int, _ name: String, _ isBot: Bool) {
         self.id = id
         self.name = name
         self.teamId = teamId
+        self.isBot = isBot
 
         if name.count <= 0 {
             let randomNames = [
@@ -52,6 +55,7 @@ class Player: Codable {
 
     func playerDidMove(_ distanceToExit: Int) {
         self.distanceToExit = distanceToExit
+        immune = false
         lastMoveTime = ProcessInfo.processInfo.systemUptime
         updateHint()
     }
