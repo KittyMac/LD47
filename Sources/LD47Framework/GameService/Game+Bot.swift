@@ -47,9 +47,7 @@ class Bot: Actor {
 
     private func joinGame(_ board: BoardUpdate) {
         // TODO: Bots should favor joining the losing teams. Do this by given each team an inverse chance for a ticket in the raffle
-        let teamID: Int = rng.get(min: 0, max: 3)
-        print("Bot joining teamID: \(teamID)")
-        game.beAddPlayer(unsafeUUID, teamID, playerName, self) { (_) in }
+        game.beAddPlayer(unsafeUUID, rng.get(min: 0, max: 3), playerName, self) { (_) in }
     }
 
     private func performTurn(_ player: Player, _ board: BoardUpdate) {
