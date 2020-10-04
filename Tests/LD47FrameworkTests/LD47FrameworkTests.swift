@@ -6,7 +6,7 @@ final class LD47FrameworkTests: XCTestCase {
     func testGameGeneration() {
         
         measure {
-            Game(42, 5000)
+            _ = Game(42, 5000)
         }
 
     }

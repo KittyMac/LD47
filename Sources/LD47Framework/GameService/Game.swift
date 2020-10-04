@@ -14,6 +14,10 @@ struct BoardUpdate: Codable {
     var nodes: [Node]
     var players: [Player]
     var player: Player?
+
+    var scores: [Int]
+
+    var eventPlayerKills: [EventPlayerKill]?
 }
 
 struct PlayerInfo: Codable {
@@ -22,11 +26,18 @@ struct PlayerInfo: Codable {
 }
 
 class Game {
+    let kScorePerPlayerKill = 5
+    let kScorePerPlayerExit = 150
+
     var nodeMap: [UInt16] = []
     var nodes: [Node] = []
     var players: [String: Player] = [:]
 
+    var scores: [Int] = [0, 0, 0, 0]
+
     let rng: Randomable = Xoroshiro128Plus()
+
+    var eventPlayerKills: [String: [EventPlayerKill]] = [:]
 
     init() {
 
@@ -57,7 +68,20 @@ class Game {
         let player = Player(playerID, teamId, playerName)
         player.nodeIdx = getSpawnIdx()
         players[playerID] = player
+        eventPlayerKills[playerID] = []
         return PlayerInfo(player: player)
+    }
+
+    func removePlayer(_ playerID: String) {
+        players.removeValue(forKey: playerID)
+        eventPlayerKills.removeValue(forKey: playerID)
+    }
+
+    func recordEventPlayerKill(_ deadPlayer: Player) {
+        let event = EventPlayerKill(deadPlayer, kScorePerPlayerKill)
+        for key in eventPlayerKills.keys {
+            eventPlayerKills[key]?.append(event)
+        }
     }
 
     func getBoardUpdate(_ playerNode: Node, _ visWidth: Int, _ visHeight: Int) -> BoardUpdate? {
@@ -86,7 +110,7 @@ class Game {
             }
         }
 
-        return BoardUpdate(nodes: visNodes, players: visPlayers, player: nil)
+        return BoardUpdate(nodes: visNodes, players: visPlayers, player: nil, scores: scores)
     }
 
     func getBoardUpdate(_ playerID: String, _ visWidth: Int, _ visHeight: Int) -> BoardUpdate? {
@@ -94,6 +118,10 @@ class Game {
         if let player = players[playerID] {
             if var update = getBoardUpdate(nodes[player.nodeIdx], visWidth, visHeight) {
                 update.player = player
+
+                update.eventPlayerKills = eventPlayerKills[player.id]
+                eventPlayerKills[player.id]?.removeAll(keepingCapacity: true)
+
                 return update
             }
         }
@@ -107,6 +135,19 @@ class Game {
             // the player may only move to a node which is adjacent to the player's current node
             if playerNode.c.contains(nodeIdx) == false {
                 return nil
+            }
+
+            // is there another player on this node...
+            for other in players.values {
+                if other.nodeIdx == nodeIdx && other.teamId != player.teamId {
+                    // we need to destroy this other player!
+
+                    scores[player.teamId] += kScorePerPlayerKill
+
+                    recordEventPlayerKill(other)
+
+                    removePlayer(other.id)
+                }
             }
 
             player.nodeIdx = nodeIdx

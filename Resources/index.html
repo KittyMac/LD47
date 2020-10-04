@@ -80,6 +80,8 @@
         //const kNodeSize = 4
         //const kPlayerSize = 7
         
+        let thisPlayer = undefined;
+        
         var lastBoardUpdate = undefined;
         var lastBoardUpdateScreenDim = 0;
         
@@ -87,6 +89,33 @@
         
         const gameContainer = new PIXI.Container();
         app.stage.addChild(gameContainer);
+        
+        
+        const score0Text = new PIXI.Text("SCORE: ", {fontFamily : 'Helvetica', fontSize: 18, fill : 0x2ca51f, align : 'left'});
+        score0Text.anchor.set(0.0, 0.0);
+        score0Text.x = 10.0
+        score0Text.y = 6.0
+        app.stage.addChild(score0Text);
+        
+        const score1Text = new PIXI.Text("SCORE: ", {fontFamily : 'Helvetica', fontSize: 18, fill : 0xc0432e, align : 'left'});
+        score1Text.anchor.set(0.0, 0.0);
+        score1Text.x = 10.0
+        score1Text.y = 26.0
+        app.stage.addChild(score1Text);
+        
+        const score2Text = new PIXI.Text("SCORE: ", {fontFamily : 'Helvetica', fontSize: 18, fill : 0x1f71a5, align : 'left'});
+        score2Text.anchor.set(0.0, 0.0);
+        score2Text.x = 10.0
+        score2Text.y = 46.0
+        app.stage.addChild(score2Text);
+        
+        const score3Text = new PIXI.Text("SCORE: ", {fontFamily : 'Helvetica', fontSize: 18, fill : 0xecd034, align : 'left'});
+        score3Text.anchor.set(0.0, 0.0);
+        score3Text.x = 10.0
+        score3Text.y = 66.0
+        app.stage.addChild(score3Text);
+        
+        
         
         const boardGfx = new PIXI.Graphics();
         gameContainer.addChild(boardGfx);
@@ -233,7 +262,12 @@
                 boardGfx.endFill();
             }
             
-            let thisPlayer = board.player;
+            if (thisPlayer != undefined && board.player == undefined) {
+                // we were destroyed since the last update
+                openWelcomeDialog()
+            }
+            
+            thisPlayer = board.player;
             
             // 3. special stuff for THE player
             if (thisPlayer != undefined) {
@@ -242,6 +276,12 @@
                 nodeText.x = pos[0];
                 nodeText.y = pos[1] + kNodeSize * 2.5;
                 nodeText.text = playerNode.d;
+            }
+            
+            // flag player containers so we can remove the ones which are no longer visible
+            for (j in playersContainer.children) {
+                let playerContainer = playersContainer.children[j];
+                playerContainer.shouldBeRemoved = true;
             }
             
             // 2. add the players
@@ -284,13 +324,35 @@
                     playerContainer.targetX = pos[0];
                     playerContainer.targetY = pos[1];
                     
-                    playerContainer.isPlayer = (thisPlayer.id == player.id);
+                    playerContainer.isPlayer = (thisPlayer != undefined && thisPlayer.id == player.id);
+                    
+                    playerContainer.shouldBeRemoved = false;
+                }
+            }
+            
+            // remove old player containers
+            for (j in playersContainer.children) {
+                let playerContainer = playersContainer.children[j];
+                if (playerContainer.shouldBeRemoved) {
+                    playerContainer.parent.removeChild(playerContainer);
                 }
             }
             
             // Display the welcome dialog
             if (thisPlayer != undefined) {
                 closeWelcomeDialog();
+            }
+            
+            score0Text.text = "SCORE: " + board.scores[0]
+            score1Text.text = "SCORE: " + board.scores[1]
+            score2Text.text = "SCORE: " + board.scores[2]
+            score3Text.text = "SCORE: " + board.scores[3]
+            
+            // handle any events which were sent along with this update
+            let eventPlayerKills = board.eventPlayerKills;
+            for (i in eventPlayerKills) {
+                let event = eventPlayerKills[i];
+                print(event);
             }
         }
         
@@ -322,10 +384,10 @@
             var team2Opacity = (selectedTeam == 2) ? 1.0 : 0.2;
             var team3Opacity = (selectedTeam == 3) ? 1.0 : 0.2;
             
-            Laba.animate(team0, "f" + team0Opacity)
-            Laba.animate(team1, "f" + team1Opacity)
-            Laba.animate(team2, "f" + team2Opacity)
-            Laba.animate(team3, "f" + team3Opacity)
+            Laba.animate(team0, "d0.27f" + team0Opacity)
+            Laba.animate(team1, "d0.27f" + team1Opacity)
+            Laba.animate(team2, "d0.27f" + team2Opacity)
+            Laba.animate(team3, "d0.27f" + team3Opacity)
         }
         
         function openWelcomeDialog() {
@@ -409,7 +471,7 @@
             openWelcomeDialog();
             
             gameUpdateLongPoll(function (info) {
-                if (info.tag == "BoardUpdate") {
+                if (info.tag == "BoardUpdate") {                    
                     updateBoard(info)
                 }
                 if (info.tag == "PlayerInfo") {
