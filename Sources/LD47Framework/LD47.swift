@@ -40,7 +40,7 @@ public enum LD47Server {
 
     }
 
-    public static func chat(_ roots: [String]) {
+    public static func game(_ roots: [String]) {
 
         // set up the services we offer to our remotes:
         let gameService = GameService(GameService.serviceName)
@@ -48,13 +48,6 @@ public enum LD47Server {
         Flynn.Node.registerActorsWithRoot([gameService])
 
         connectToRoots(roots, [GameService.self])
-
-        while true { sleep(99999) }
-    }
-
-    public static func game(_ roots: [String]) {
-
-        connectToRoots(roots, [])
 
         while true { sleep(99999) }
     }
