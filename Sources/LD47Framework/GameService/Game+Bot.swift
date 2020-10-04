@@ -14,18 +14,18 @@ class Bot: Actor {
 
     private let game: Game
     private var playerName: String
-    private var rng: Randomable = Xoroshiro128Plus(UInt64.random(in: 0...100000))
+    private var rng: Randomable = Xoroshiro128Plus()
     private let visRange = 70
 
-    init(_ game: Game) {
+    init(_ game: Game, _ seed: UInt64) {
         self.game = game
         self.playerName = ""
+        self.rng = Xoroshiro128Plus(seed)
         super.init()
 
         self.playerName = "\(self)"
 
         Flynn.Timer(timeInterval: kTransitTime + 0.3, repeats: true, self) { (_) in
-
             game.beGetBoardUpdate(self.unsafeUUID, self.visRange, self.visRange, self) { (board) in
                 if let board = board {
                     if let player = board.player {
@@ -35,10 +35,7 @@ class Bot: Actor {
                     }
                 }
             }
-
         }
-
-        //_beAddPlayer(unsafeUUID, _ teamId: Int, playerName)
     }
 
     private func getNodeById(_ nodeIdx: Int, _ board: BoardUpdate) -> Node? {

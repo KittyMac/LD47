@@ -22,7 +22,15 @@ xcode:
 	pamphlet --clean ./Resources/ ./Sources/Pamphlet/ 
 	swift package generate-xcodeproj
 	meta/addBuildPhase LD47.xcodeproj/project.pbxproj "LD47::LD47Framework" 'cd $${SRCROOT}; ./meta/CombinedBuildPhases.sh'
-	
+
+
+test-http: build
+	.build/release/LD47 http
+
+test-game: build
+	.build/release/LD47 game 127.0.0.1:9090
+
+
 install-nginx:
 	sudo service nginx stop
 	sudo apt-get update
@@ -46,30 +54,69 @@ install-game: update build
 	sudo systemctl enable ld47_game
 	sudo systemctl daemon-reload
 
-test-http: build
-	.build/release/LD47 http
 
-test-game: build
-	.build/release/LD47 game 127.0.0.1:9090
+
+uninstall-nginx:
+	-sudo service nginx stop
+	-sudo rm -f /etc/nginx/sites-enabled/default
+	-sudo rm /etc/nginx/sites-enabled/nginx_ld47
+
+uninstall-http:
+	-sudo systemctl stop ld47_http	
+	-sudo rm /etc/systemd/system/ld47_http.service
+
+uninstall-game:
+	-sudo systemctl stop ld47_game
+	-sudo rm /etc/systemd/system/ld47_game.service
+
+
+# ADMINISTER THE CLUSTER OVER SSH
+
+
+delete-nginx:
+	ssh ubuntu@192.168.1.211 "cd LD47; git checkout .; git pull; make uninstall-nginx"
+
+delete-http1:
+	ssh ubuntu@192.168.1.211 "cd LD47; git checkout .; git pull; make install-http"
+
+delete-http2:
+	ssh ubuntu@192.168.1.212 "cd LD47; git checkout .; git pull; make install-http"
+
+delete-game1:
+	ssh ubuntu@192.168.1.213 "cd LD47; git checkout .; git pull; make install-game"
+
+delete-http3:
+	ssh ubuntu@192.168.1.214 "cd LD47; git checkout .; git pull; make install-http"
+
+delete-http4:
+	ssh ubuntu@192.168.1.215 "cd LD47; git checkout .; git pull; make install-http"
+
+delete-cluster: delete-nginx delete-http1 delete-http2 delete-game1 delete-http3 delete-http4
 
 
 
 update-nginx:
-	echo "update nginx not yet implemented"
+	ssh ubuntu@192.168.1.210 "git clone https://github.com/KittyMac/LD47"
+	ssh ubuntu@192.168.1.210 "cd LD47; git checkout .; git pull; make install-nginx"
 
 update-http1:
+	ssh ubuntu@192.168.1.211 "git clone https://github.com/KittyMac/LD47"
 	ssh ubuntu@192.168.1.211 "cd LD47; git checkout .; git pull; make install-http"
 
 update-http2:
+	ssh ubuntu@192.168.1.212 "git clone https://github.com/KittyMac/LD47"
 	ssh ubuntu@192.168.1.212 "cd LD47; git checkout .; git pull; make install-http"
 
 update-game1:
+	ssh ubuntu@192.168.1.213 "git clone https://github.com/KittyMac/LD47"
 	ssh ubuntu@192.168.1.213 "cd LD47; git checkout .; git pull; make install-game"
 
 update-http3:
+	ssh ubuntu@192.168.1.214 "git clone https://github.com/KittyMac/LD47"
 	ssh ubuntu@192.168.1.214 "cd LD47; git checkout .; git pull; make install-http"
 
 update-http4:
+	ssh ubuntu@192.168.1.215 "git clone https://github.com/KittyMac/LD47"
 	ssh ubuntu@192.168.1.215 "cd LD47; git checkout .; git pull; make install-http"
 
 update-cluster: update-nginx update-http1 update-http2 update-game1 update-http3 update-http4

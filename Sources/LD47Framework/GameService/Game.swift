@@ -44,6 +44,8 @@ class Game: Actor {
 
     private var scores: [Int] = [0, 0, 0, 0]
 
+    public var safeMaxNodeDistance = 0
+
     private let rng: Randomable = Xoroshiro128Plus()
 
     private var eventPlayerKills: [String: [EventPlayerKill]] = [:]
@@ -56,25 +58,27 @@ class Game: Actor {
     init(_ seed: Int, _ numNodes: Int, _ numBots: Int) {
         super.init()
 
+        for _ in 0..<100 {
+            print(rng.get(min: 0, max: 3))
+        }
+
         safeGenerate(seed, numNodes)
 
         for _ in 0..<numBots {
-            safeBots.append(Bot(self))
+            safeBots.append(Bot(self, rng.get()))
         }
     }
 
     private func getSpawnIdx() -> Int {
-        // find a node which is sufficiently distant from the exit node
-        var spawn = safeNodes[0]
-
-        for _ in 0..<100 {
+        // spawn far enough away from the exit for it to be fun
+        let minSpawnDistance = safeMaxNodeDistance - 3
+        for _ in 0..<200 {
             let node = rng.get(safeNodes)
-            if node.d > spawn.d {
-                spawn = node
+            if node.d >= minSpawnDistance {
+                return node.id
             }
         }
-
-        return spawn.id
+        return safeNodes.count-1
     }
 
     private func _beAddPlayer(_ playerID: String, _ teamId: Int, _ playerName: String) -> PlayerInfo {
