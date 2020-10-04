@@ -15,7 +15,7 @@ let kMaxDistance: Int = 32767
 
 let kMaxConnections: Int = 4
 
-let kMaxMapSize = 12_000
+let kMaxMapSize = 6_000
 
 class Node: Codable, Equatable {
     static func == (lhs: Node, rhs: Node) -> Bool {

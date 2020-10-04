@@ -14,9 +14,9 @@ import Pamphlet
 let kTransitTime: Double = 0.57
 
 #if DEBUG
-let kResetScoreTotal = 500
+let kResetScoreTotal = 25_000
 #else
-let kResetScoreTotal = 10_000
+let kResetScoreTotal = 25_000
 #endif
 
 private var lastWinnerString = "This is the first round; go, Go, GO!"
@@ -46,7 +46,7 @@ struct PlayerInfo: Codable {
 
 class Game: Actor {
     private let kScorePerPlayerKill = 5
-    private let kScorePerPlayerExit = 150
+    private let kScorePerPlayerExit = 500
 
     public var unsafeGameOver: Bool = false
 

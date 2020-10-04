@@ -50,9 +50,9 @@
                     <p>
                     <strong>Escape the Loop</strong> is multiplayer, online and persistent. Grab some friends and drop in for a hide-and-seek brawl where you work with your team to gain enough points to win the round.
                     <p>
-                    Earn points by <strong>landing on other players</strong> or <strong>finding the hidden exit</strong>. First team to <strong>10,000</strong> points wins the round and the game resets. If you need help finding the exit, simply <strong>remain still for 5 seconds</strong> and the number of connections between you and the exit will be displayed.
+                    Earn points by <strong>landing on other players</strong> or <strong>finding the hidden exit</strong>. First team to <strong>25,000</strong> points wins the round and the game resets. If you need help finding the exit, simply <strong>remain still for 5 seconds</strong> and the number of connections between you and the exit will be displayed.
                     <p>
-                    <strong>150 Points</strong> - Escaping through the hidden exit<br>
+                    <strong>500 Points</strong> - Escaping through the hidden exit<br>
                     <strong>5 Points</strong> - Land on another player
                                         
                 </div>
@@ -449,23 +449,32 @@
             if (playerCanMove == false) {
                 return;
             }
+            if (thisPlayer == undefined) {
+                return;
+            }
             
             let mousePos = event.data.getLocalPosition(gameContainer)
             
             // find the node nearest the click
             var clickNode = undefined
-            var clickNodeDistance = (kPlayerSize * 6) * (kPlayerSize * 6)
+            var clickNodeDistance = 999999999
             let nodes = lastBoardUpdate.nodes;
+            let playerNode = getNodeByIdx(nodes, thisPlayer.nodeIdx);
+            
             for (i in nodes) {
                 let node = nodes[i];
-                let pos = getNodePos(node);
-                let dx = (mousePos.x - pos[0])
-                let dy = (mousePos.y - pos[1])
-                let d = dx * dx + dy * dy;
                 
-                if (d < clickNodeDistance) {
-                    clickNode = node;
-                    clickNodeDistance = d;
+                // disclude the player's node, only include nodes which are adjacent to player node
+                if (node.id != thisPlayer.nodeIdx && playerNode.c.includes(node.id)) {
+                    let pos = getNodePos(node);
+                    let dx = (mousePos.x - pos[0])
+                    let dy = (mousePos.y - pos[1])
+                    let d = dx * dx + dy * dy;
+                
+                    if (clickNode == undefined || d < clickNodeDistance) {
+                        clickNode = node;
+                        clickNodeDistance = d;
+                    }
                 }
             }
             
