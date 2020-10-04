@@ -13,6 +13,12 @@ import Pamphlet
 
 let kTransitTime: Double = 0.57
 
+#if DEBUG
+let kResetScoreTotal = 500
+#else
+let kResetScoreTotal = 10_000
+#endif
+
 struct BoardUpdate: Codable {
     var tag: String = "BoardUpdate"
     var transitTime: Double = kTransitTime
@@ -35,6 +41,8 @@ struct PlayerInfo: Codable {
 class Game: Actor {
     private let kScorePerPlayerKill = 5
     private let kScorePerPlayerExit = 150
+
+    public var unsafeGameOver: Bool = false
 
     public var safeNodeMap: [UInt16] = []
     public var safeNodes: [Node] = []
@@ -80,7 +88,11 @@ class Game: Actor {
     private func _beAddPlayer(_ playerID: String,
                               _ teamId: Int,
                               _ playerName: String,
-                              _ isBot: Bool) -> PlayerInfo {
+                              _ isBot: Bool) -> PlayerInfo? {
+        if unsafeGameOver {
+            return nil
+        }
+
         if let player = safePlayers[playerID] {
             return PlayerInfo(player: player)
         }
@@ -249,6 +261,24 @@ class Game: Actor {
 
             player.immune = true
         }
+
+        // check for game over
+        for score in scores where score >= kResetScoreTotal {
+            // Ok... how do we go about resetting?
+
+            // 0. flag this game as being over
+            unsafeGameOver = true
+
+            // 1. remove all players
+            for player in safePlayers.values {
+                _beRemovePlayer(player.id)
+            }
+
+            safeBots.removeAll()
+
+            // Don't allow people to join a game which is over, trust in
+            // the game service to create a new game and replace this one
+        }
     }
 
 }
@@ -264,7 +294,7 @@ extension Game {
                             _ playerName: String,
                             _ isBot: Bool,
                             _ sender: Actor,
-                            _ callback: @escaping ((PlayerInfo) -> Void)) -> Self {
+                            _ callback: @escaping ((PlayerInfo?) -> Void)) -> Self {
         unsafeSend {
             let result = self._beAddPlayer(playerID, teamId, playerName, isBot)
             sender.unsafeSend { callback(result) }

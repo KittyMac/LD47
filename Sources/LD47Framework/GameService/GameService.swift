@@ -12,10 +12,14 @@ class GameService: RemoteActor {
     private var game: Game?
 
     override func safeInit() {
+        reset()
+    }
+
+    private func reset() {
 #if DEBUG
         game = Game(42, 50, 20)
 #else
-        game = Game(42, 10000, 250)
+        game = Game(42, 6000, 250)
 #endif
     }
 
@@ -38,6 +42,9 @@ class GameService: RemoteActor {
                              _ visHeight: Int,
                              _ returnCallback: @escaping (String) -> Void) {
         if let game = game {
+            if game.unsafeGameOver {
+                reset()
+            }
             game.beGetBoardUpdate(playerID, visWidth, visHeight, Flynn.any) {
                 returnCallback((try? $0.json()) ?? "")
             }
