@@ -11,6 +11,7 @@ class Player: Codable {
     var name: String
     var teamId: Int = 0
     var nodeIdx: Int = 0
+    var inTransit: Bool = false
 
     init(_ id: String, _ teamId: Int, _ name: String) {
         self.id = id

@@ -13,9 +13,9 @@ class GameService: RemoteActor {
 
     override func safeInit() {
 #if DEBUG
-        game = Game(42, 50)
+        game = Game(42, 50, 4)
 #else
-        game = Game(42, 5000)
+        game = Game(42, 5000, 150)
 #endif
     }
 

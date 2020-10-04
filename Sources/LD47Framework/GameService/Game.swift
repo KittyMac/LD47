@@ -4,19 +4,19 @@ import Socket
 import PicaroonFramework
 import Pamphlet
 
-// swiftlint:disable identifier_name
 // swiftlint:disable function_parameter_count
-// swiftlint:disable file_length
-// swiftlint:disable cyclomatic_complexity
-// swiftlint:disable function_body_length
 
 // The network of nodes is a tight array of nodes, each node
 // has a X/Y position and can contain up to four connections
 // to other nodes. d is the distance needed to travel from
 // here to the exit.  The exit is always node 0.
 
+let kTransitTime: Double = 0.57
+
 struct BoardUpdate: Codable {
     var tag: String = "BoardUpdate"
+    var transitTime: Double = kTransitTime
+
     var nodes: [Node]
     var players: [Player]
     var player: Player?
@@ -36,9 +36,11 @@ class Game: Actor {
     private let kScorePerPlayerKill = 5
     private let kScorePerPlayerExit = 150
 
-    private var nodeMap: [UInt16] = []
-    private var nodes: [Node] = []
-    private var players: [String: Player] = [:]
+    public var safeNodeMap: [UInt16] = []
+    public var safeNodes: [Node] = []
+    public var safePlayers: [String: Player] = [:]
+
+    public var safeBots: [Bot] = []
 
     private var scores: [Int] = [0, 0, 0, 0]
 
@@ -51,18 +53,22 @@ class Game: Actor {
         super.init()
     }
 
-    init(_ seed: Int, _ numNodes: Int) {
+    init(_ seed: Int, _ numNodes: Int, _ numBots: Int) {
         super.init()
 
-        generate(seed, numNodes)
+        safeGenerate(seed, numNodes)
+
+        for _ in 0..<numBots {
+            safeBots.append(Bot(self))
+        }
     }
 
     private func getSpawnIdx() -> Int {
         // find a node which is sufficiently distant from the exit node
-        var spawn = nodes[0]
+        var spawn = safeNodes[0]
 
         for _ in 0..<100 {
-            let node = rng.get(nodes)
+            let node = rng.get(safeNodes)
             if node.d > spawn.d {
                 spawn = node
             }
@@ -72,19 +78,19 @@ class Game: Actor {
     }
 
     private func _beAddPlayer(_ playerID: String, _ teamId: Int, _ playerName: String) -> PlayerInfo {
-        if let player = players[playerID] {
+        if let player = safePlayers[playerID] {
             return PlayerInfo(player: player)
         }
         let player = Player(playerID, teamId, playerName)
         player.nodeIdx = getSpawnIdx()
-        players[playerID] = player
+        safePlayers[playerID] = player
         eventPlayerKills[playerID] = []
         eventPlayerBonuses[playerID] = []
         return PlayerInfo(player: player)
     }
 
     private func _beRemovePlayer(_ playerID: String) {
-        players.removeValue(forKey: playerID)
+        safePlayers.removeValue(forKey: playerID)
         eventPlayerKills.removeValue(forKey: playerID)
         eventPlayerBonuses.removeValue(forKey: playerID)
     }
@@ -105,37 +111,34 @@ class Game: Actor {
 
     private func getBoardUpdate(_ playerNode: Node, _ visWidth: Int, _ visHeight: Int) -> BoardUpdate? {
         // 1. only include nodes and players which are visible to this player
-        var visNodes: [Node] = []
+        var visNodes: [Int: Node] = [:]
         var visPlayers: [Player] = []
 
-        nodesNear(playerNode.x, playerNode.y, visWidth/2, visHeight/2, &visNodes)
+        safeNodesNear(playerNode.x, playerNode.y, visWidth/2, visHeight/2, &visNodes)
 
         // 2. run back through the nodes, add any nodes which are connected to a visNode
-        for node in visNodes {
-            for neighborIdx in node.c {
-                let neighbor = nodes[neighborIdx]
-                if visNodes.contains(neighbor) == false {
-                    visNodes.append(neighbor)
-                }
+        for node in visNodes.values {
+            for neighborIdx in node.c where visNodes[neighborIdx] == nil {
+                visNodes[neighborIdx] = safeNodes[neighborIdx]
             }
         }
 
         // add players who are visible
-        for otherPlayer in players.values {
-            let otherPlayerNode = nodes[otherPlayer.nodeIdx]
+        for otherPlayer in safePlayers.values {
+            let otherPlayerNode = safeNodes[otherPlayer.nodeIdx]
             if  abs(otherPlayerNode.x - playerNode.x) < visWidth &&
                 abs(otherPlayerNode.y - playerNode.y) < visHeight {
                 visPlayers.append(otherPlayer)
             }
         }
 
-        return BoardUpdate(nodes: visNodes, players: visPlayers, player: nil, scores: scores)
+        return BoardUpdate(nodes: Array(visNodes.values), players: visPlayers, player: nil, scores: scores)
     }
 
     private func getBoardUpdate(_ playerID: String, _ visWidth: Int, _ visHeight: Int) -> BoardUpdate? {
         // 0. find the player's node
-        if let player = players[playerID] {
-            if var update = getBoardUpdate(nodes[player.nodeIdx], visWidth, visHeight) {
+        if let player = safePlayers[playerID] {
+            if var update = getBoardUpdate(safeNodes[player.nodeIdx], visWidth, visHeight) {
                 update.player = player
 
                 update.eventPlayerKills = eventPlayerKills[player.id]
@@ -147,7 +150,7 @@ class Game: Actor {
                 return update
             }
         }
-        return getBoardUpdate(nodes[0], visWidth, visHeight)
+        return getBoardUpdate(safeNodes[0], visWidth, visHeight)
     }
 
     private func _beGetBoardUpdate(_ playerID: String, _ visWidth: Int, _ visHeight: Int) -> BoardUpdate? {
@@ -155,34 +158,24 @@ class Game: Actor {
     }
 
     private func _beMovePlayer(_ playerID: String, _ nodeIdx: Int, _ visWidth: Int, _ visHeight: Int) -> BoardUpdate? {
-        if let player = players[playerID] {
-            let playerNode = nodes[player.nodeIdx]
+        if let player = safePlayers[playerID] {
+            let playerNode = safeNodes[player.nodeIdx]
+
+            // the player may not move when they are in transit
+            if player.inTransit {
+                return nil
+            }
 
             // the player may only move to a node which is adjacent to the player's current node
             if playerNode.c.contains(nodeIdx) == false {
                 return nil
             }
 
-            // is there another player on this node...
-            for other in players.values {
-                if other.nodeIdx == nodeIdx && other.teamId != player.teamId {
-                    // we need to destroy this other player!
-
-                    scores[player.teamId] += kScorePerPlayerKill
-
-                    recordEventPlayerKill(other)
-
-                    _beRemovePlayer(other.id)
-                }
-            }
-
             player.nodeIdx = nodeIdx
+            player.inTransit = true
 
-            // did we reach the exit? it would be nice if the user had to sit on it or something...
-            if nodeIdx == 0 {
-                scores[player.teamId] += kScorePerPlayerExit
-                recordEventPlayerBonus(player)
-                player.nodeIdx = getSpawnIdx()
+            Flynn.Timer(timeInterval: kTransitTime, repeats: false, self) { (_) in
+                self.completePlayerTransit(player)
             }
 
             // If we moved the player, then we should send back an updated gameboard
@@ -192,205 +185,27 @@ class Game: Actor {
         return nil
     }
 
-    // MARK: BOARD STUFF
+    private func completePlayerTransit(_ player: Player) {
+        player.inTransit = false
 
-    private func connect(_ a: Node, _ b: Node) {
-        a.to(b.id)
-        b.to(a.id)
-    }
+        // is there another player on this node, not in transit, and a member of another team?
+        for other in safePlayers.values where
+            other.nodeIdx == player.nodeIdx &&
+            other.teamId != player.teamId &&
+            other.inTransit == false {
 
-    @inline(__always)
-    private func mapIdx(_ x: Int, _ y: Int) -> Int? {
-        let mapIdx = y * kMaxMapSize + x
-        if mapIdx >= 0 && mapIdx < (kMaxMapSize*kMaxMapSize) {
-            return mapIdx
-        }
-        return nil
-    }
-
-    private func nodesNear(_ x: Int, _ y: Int, _ cx: Int, _ cy: Int, _ nearNodes: inout [Node]) {
-        nearNodes.removeAll(keepingCapacity: true)
-
-        var nearNodesFast: [Int: Node] = [:]
-
-        for mapX in x-cx..<x+cx {
-            for mapY in y-cy..<y+cy {
-                if let idx = mapIdx(mapX, mapY) {
-                    if idx != 0 {
-                        let nearNodeIdx = Int(nodeMap[idx])
-                        if nearNodeIdx != kNoNode {
-                            let nearNode = nodes[nearNodeIdx]
-                            if nearNodesFast[nearNodeIdx] == nil {
-                                nearNodesFast[nearNodeIdx] = nearNode
-                            }
-                        }
-                    }
-                }
-            }
+            // we need to destroy this other player!
+            scores[player.teamId] += kScorePerPlayerKill
+            recordEventPlayerKill(other)
+            _beRemovePlayer(other.id)
         }
 
-        for node in nearNodesFast.values {
-            nearNodes.append(node)
+        // did we reach the exit? it would be nice if the user had to sit on it or something...
+        if player.nodeIdx == 0 {
+            scores[player.teamId] += kScorePerPlayerExit
+            recordEventPlayerBonus(player)
+            player.nodeIdx = getSpawnIdx()
         }
-    }
-
-    private func mark(_ x: Int, _ y: Int, _ id: Int) {
-        // mark the spots on the map that are now invalid
-        for mapX in x-6..<x+6 {
-            for mapY in y-6..<y+6 {
-                if let idx = mapIdx(mapX, mapY) {
-                    nodeMap[idx] = UInt16(id)
-                }
-            }
-        }
-    }
-
-    private func generate(_ seed: Int, _ targetNodes: Int) {
-        let rng: Randomable = Xoroshiro128Plus("\(seed)")
-
-        nodeMap = [UInt16](repeating: UInt16(kNoNode), count: kMaxMapSize * kMaxMapSize)
-
-        nodes.removeAll()
-        players.removeAll()
-
-        var openNodes: [Node] = []
-
-        // start with exit node (always index 0)
-        let exitNode = Node(0, kMaxMapSize / 2, kMaxMapSize / 2)
-        exitNode.d = 0
-        nodes.append(exitNode)
-        openNodes.append(exitNode)
-
-        mark(exitNode.x, exitNode.y, exitNode.id)
-
-        // until we have enough nodes
-        while nodes.count < targetNodes {
-
-            // choose a random node from the open nodes
-            let parentNode = rng.get(openNodes)
-
-            // if we chose a node that's already full, remove it from the open nodes
-            if parentNode.c.count >= kMaxConnections {
-                openNodes.removeAll(parentNode)
-                continue
-            }
-
-            // choose a random offset from this node
-            var x = 0
-            var y = 0
-            var valid = false
-            for _ in 0..<100 {
-                x = rng.get(min: -10, max: 10) + parentNode.x
-                y = rng.get(min: -10, max: 10) + parentNode.y
-
-                // check to see if this spot is clear (make sure we're not
-                // too close to any other existing node
-                if let idx = mapIdx(x, y) {
-                    if nodeMap[idx] == kNoNode {
-                        valid = true
-                        break
-                    }
-                }
-            }
-
-            // if we didn't find a valid spot after 100 tries, list this not open
-            if !valid {
-                openNodes.removeAll(parentNode)
-                continue
-            }
-
-            let newNode = Node(nodes.count, x, y)
-            nodes.append(newNode)
-            openNodes.append(newNode)
-
-            // mark the spots on the map that are now invalid
-            mark(x, y, newNode.id)
-
-            // add connections for this node. if we always connect to our parent, then we know we will
-            // always be able to reach the exit
-            connect(parentNode, newNode)
-
-            if nodes.count % 50 == 0 {
-                print("A: \(nodes.count) of \(targetNodes)")
-            }
-        }
-
-        // run through all nodes and add a little interconnected-ness
-        var nearNodes: [Node] = []
-
-        var nodeCount = 0
-        for node in nodes {
-
-            nodeCount += 1
-            if nodeCount % 50 == 0 {
-                print("B: \(nodeCount) of \(targetNodes)")
-            }
-
-            if node.c.count > kMaxConnections {
-                continue
-            }
-
-            nodesNear(node.x, node.y, 8, 8, &nearNodes)
-
-            for other in nearNodes {
-                if node.c.count > kMaxConnections {
-                    break
-                }
-                if other.c.count > kMaxConnections {
-                    continue
-                }
-
-                if rng.maybe(0.2) {
-                    connect(node, other)
-                }
-            }
-        }
-
-        // perform distance calculations so all nodes know how far they are from the exit
-        solve()
-
-    }
-
-    private func solve() {
-        var changed = true
-        while changed {
-            changed = false
-
-            if transformForward() {
-                changed = true
-            }
-            if transformBackward() {
-                changed = true
-            }
-        }
-    }
-
-    private func transformForward() -> Bool {
-        var changed = false
-        for node in nodes where node.d > 0 {
-            for nextIdx in node.c {
-                let next = nodes[nextIdx]
-                if next.d >= 0 && next.d+1 < node.d {
-                    node.d = next.d+1
-                    changed = true
-                }
-            }
-        }
-        return changed
-    }
-
-    private func transformBackward() -> Bool {
-        var changed = false
-        for node in nodes.reversed() where node.d > 0 {
-            for nextIdx in node.c {
-                let next = nodes[nextIdx]
-                if next.d >= 0 && next.d+1 < node.d {
-                    node.d = next.d+1
-                    changed = true
-                }
-            }
-        }
-        return changed
     }
 
 }
