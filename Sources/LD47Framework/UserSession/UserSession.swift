@@ -5,6 +5,8 @@ import PicaroonFramework
 import Pamphlet
 
 // swiftlint:disable identifier_name
+// swiftlint:disable cyclomatic_complexity
+// swiftlint:disable function_body_length
 
 public class LD47UserSession: UserSession {
 

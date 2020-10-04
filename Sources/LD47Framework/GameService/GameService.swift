@@ -4,6 +4,8 @@ import Socket
 import PicaroonFramework
 import Pamphlet
 
+// swiftlint:disable function_parameter_count
+
 class GameService: RemoteActor {
     static let serviceName = "LD47_GAME_SERVICE"
 
@@ -17,31 +19,45 @@ class GameService: RemoteActor {
 #endif
     }
 
-    private func _bePlayerJoin(_ playerID: String, _ teamId: Int, _ playerName: String) -> String {
-        guard let game = game else { return "" }
+    private func _bePlayerJoin(_ playerID: String,
+                               _ teamId: Int,
+                               _ playerName: String,
+                               _ returnCallback: @escaping (String) -> Void) {
 
-        if let json = try? game.addPlayer(playerID, teamId, playerName).json() {
-            return json
+        if let game = game {
+            game.beAddPlayer(playerID, teamId, playerName, Flynn.any) {
+                returnCallback((try? $0.json()) ?? "")
+            }
+        } else {
+            returnCallback("")
         }
-        return ""
     }
 
-    private func _beGetBoard(_ playerID: String, _ visWidth: Int, _ visHeight: Int) -> String {
-        guard let game = game else { return "" }
-
-        if let json = try? game.getBoardUpdate(playerID, visWidth, visHeight).json() {
-            return json
+    private func _beGetBoard(_ playerID: String,
+                             _ visWidth: Int,
+                             _ visHeight: Int,
+                             _ returnCallback: @escaping (String) -> Void) {
+        if let game = game {
+            game.beGetBoardUpdate(playerID, visWidth, visHeight, Flynn.any) {
+                returnCallback((try? $0.json()) ?? "")
+            }
+        } else {
+            returnCallback("")
         }
-        return ""
     }
 
-    private func _beMovePlayer(_ playerID: String, _ nodeIdx: Int, _ visWidth: Int, _ visHeight: Int) -> String {
-        guard let game = game else { return "" }
-
-        if let json = try? game.movePlayer(playerID, nodeIdx, visWidth, visHeight).json() {
-            return json
+    private func _beMovePlayer(_ playerID: String,
+                               _ nodeIdx: Int,
+                               _ visWidth: Int,
+                               _ visHeight: Int,
+                               _ returnCallback: @escaping (String) -> Void) {
+        if let game = game {
+            game.beMovePlayer(playerID, nodeIdx, visWidth, visHeight, Flynn.any) {
+                returnCallback((try? $0.json()) ?? "")
+            }
+        } else {
+            returnCallback("")
         }
-        return ""
     }
 }
 
@@ -130,26 +146,38 @@ extension GameService {
     }
 
     public func unsafeRegisterAllBehaviors() {
-        safeRegisterRemoteBehavior("bePlayerJoin") { [unowned self] (data) in
+        safeRegisterDelayedRemoteBehavior("bePlayerJoin") { [unowned self] (data, callback) in
             // swiftlint:disable:next force_try
             let msg = try! JSONDecoder().decode(BePlayerJoinCodableRequest.self, from: data)
-            // swiftlint:disable:next force_try
-            return try! JSONEncoder().encode(
-                BePlayerJoinCodableResponse(response: self._bePlayerJoin(msg.arg0, msg.arg1, msg.arg2)))
+            self._bePlayerJoin(msg.arg0, msg.arg1, msg.arg2) { (returnValue: String) in
+                callback(
+                    // swiftlint:disable:next force_try
+                    try! JSONEncoder().encode(
+                        BePlayerJoinCodableResponse(response: returnValue))
+                )
+            }
         }
-        safeRegisterRemoteBehavior("beGetBoard") { [unowned self] (data) in
+        safeRegisterDelayedRemoteBehavior("beGetBoard") { [unowned self] (data, callback) in
             // swiftlint:disable:next force_try
             let msg = try! JSONDecoder().decode(BeGetBoardCodableRequest.self, from: data)
-            // swiftlint:disable:next force_try
-            return try! JSONEncoder().encode(
-                BeGetBoardCodableResponse(response: self._beGetBoard(msg.arg0, msg.arg1, msg.arg2)))
+            self._beGetBoard(msg.arg0, msg.arg1, msg.arg2) { (returnValue: String) in
+                callback(
+                    // swiftlint:disable:next force_try
+                    try! JSONEncoder().encode(
+                        BeGetBoardCodableResponse(response: returnValue))
+                )
+            }
         }
-        safeRegisterRemoteBehavior("beMovePlayer") { [unowned self] (data) in
+        safeRegisterDelayedRemoteBehavior("beMovePlayer") { [unowned self] (data, callback) in
             // swiftlint:disable:next force_try
             let msg = try! JSONDecoder().decode(BeMovePlayerCodableRequest.self, from: data)
-            // swiftlint:disable:next force_try
-            return try! JSONEncoder().encode(
-                BeMovePlayerCodableResponse(response: self._beMovePlayer(msg.arg0, msg.arg1, msg.arg2, msg.arg3)))
+            self._beMovePlayer(msg.arg0, msg.arg1, msg.arg2, msg.arg3) { (returnValue: String) in
+                callback(
+                    // swiftlint:disable:next force_try
+                    try! JSONEncoder().encode(
+                        BeMovePlayerCodableResponse(response: returnValue))
+                )
+            }
         }
     }
 }
