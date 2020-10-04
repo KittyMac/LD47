@@ -61,7 +61,7 @@ public class LD47UserSession: UserSession {
                     if let game = $0 as? GameService {
                         game.bePlayerJoin(self.unsafeSessionUUID,
                                           request.teamId,
-                                          request.playerName,
+                                          String(request.playerName.prefix(32)),
                                           self) {
                             connection.beSendData(HttpResponse.asData(self, .ok, .txt, $0))
                         }

@@ -19,9 +19,15 @@ let kResetScoreTotal = 500
 let kResetScoreTotal = 10_000
 #endif
 
+private var lastWinnerString = "This is the first round; go, Go, GO!"
+private var lastAdminMessageString = ""
+private var allTimeHumanIDs: [String: Bool] = [:]
+
 struct BoardUpdate: Codable {
     var tag: String = "BoardUpdate"
     var transitTime: Double = kTransitTime
+    var lastWinner: String
+    var adminMessage: String
 
     var nodes: [Node]
     var players: [Player]
@@ -59,6 +65,9 @@ class Game: Actor {
     private var eventPlayerKills: [String: [EventPlayerKill]] = [:]
     private var eventPlayerBonuses: [String: [EventPlayerBonus]] = [:]
 
+    private var currentNumberOfHumans = 0
+    private var currentNumberOfBots = 0
+
     override init() {
         super.init()
     }
@@ -71,6 +80,8 @@ class Game: Actor {
         for _ in 0..<numBots {
             safeBots.append(Bot(self, rng.get()))
         }
+
+        updateAdminMessage()
     }
 
     private func getSpawnIdx() -> Int {
@@ -83,6 +94,29 @@ class Game: Actor {
             }
         }
         return safeNodes.count-1
+    }
+
+    private func updateAdminMessage() {
+        lastAdminMessageString = ""
+
+        if currentNumberOfHumans == 1 {
+            lastAdminMessageString += "\(currentNumberOfHumans) human | "
+        } else {
+            lastAdminMessageString += "\(currentNumberOfHumans) humans | "
+        }
+
+        if currentNumberOfBots == 1 {
+            lastAdminMessageString += "\(currentNumberOfBots) bot | "
+        } else {
+            lastAdminMessageString += "\(currentNumberOfBots) bots | "
+        }
+
+        let allTimeHumansCount = allTimeHumanIDs.count
+        if allTimeHumansCount == 1 {
+            lastAdminMessageString += "\(allTimeHumansCount) human all time"
+        } else {
+            lastAdminMessageString += "\(allTimeHumansCount) humans all time"
+        }
     }
 
     private func _beAddPlayer(_ playerID: String,
@@ -104,6 +138,15 @@ class Game: Actor {
 
         player.immune = true
 
+        if isBot == false {
+            allTimeHumanIDs[playerID] = true
+            currentNumberOfHumans += 1
+        } else {
+            currentNumberOfBots += 1
+        }
+
+        updateAdminMessage()
+
         safePlayers[playerID] = player
         eventPlayerKills[playerID] = []
         eventPlayerBonuses[playerID] = []
@@ -111,6 +154,19 @@ class Game: Actor {
     }
 
     private func _beRemovePlayer(_ playerID: String) {
+        if let player = safePlayers[playerID] {
+            if player.isBot == false {
+                currentNumberOfHumans -= 1
+                if currentNumberOfHumans < 0 {
+                    currentNumberOfHumans = 0
+                }
+            } else {
+                currentNumberOfBots -= 1
+            }
+
+            updateAdminMessage()
+        }
+
         safePlayers.removeValue(forKey: playerID)
         eventPlayerKills.removeValue(forKey: playerID)
         eventPlayerBonuses.removeValue(forKey: playerID)
@@ -157,7 +213,12 @@ class Game: Actor {
             }
         }
 
-        return BoardUpdate(nodes: Array(visNodes.values), players: visPlayers, player: nil, scores: scores)
+        return BoardUpdate(lastWinner: lastWinnerString,
+                           adminMessage: lastAdminMessageString,
+                           nodes: Array(visNodes.values),
+                           players: visPlayers,
+                           player: nil,
+                           scores: scores)
     }
 
     private func getBoardUpdate(_ playerID: String, _ visWidth: Int, _ visHeight: Int) -> BoardUpdate? {
@@ -263,8 +324,23 @@ class Game: Actor {
         }
 
         // check for game over
-        for score in scores where score >= kResetScoreTotal {
+        for idx in 0..<scores.count where scores[idx] >= kResetScoreTotal {
             // Ok... how do we go about resetting?
+
+            var roundTimeInMinutes = Int(unsafeUptime / 60.0)
+            if roundTimeInMinutes == 0 {
+                roundTimeInMinutes = 1
+            }
+
+            let plural = roundTimeInMinutes > 1 ? "s" : ""
+
+            switch idx {
+            case 0: lastWinnerString = "Team GREEN won the last round in \(roundTimeInMinutes) minute\(plural)!"
+            case 1: lastWinnerString = "Team RED won the last round in \(roundTimeInMinutes) minute\(plural)!"
+            case 2: lastWinnerString = "Team BLUE won the last round in \(roundTimeInMinutes) minute\(plural)!"
+            case 3: lastWinnerString = "Team YELLOW won the last round in \(roundTimeInMinutes) minute\(plural)!"
+            default: lastWinnerString = "(no previous winner)"
+            }
 
             // 0. flag this game as being over
             unsafeGameOver = true

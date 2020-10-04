@@ -23,7 +23,7 @@ class Bot: Actor {
         self.rng = Xoroshiro256StarStar(seed)
         super.init()
 
-        self.playerName = "\(self)"
+        self.playerName = "BOT"
 
         // stagger bot start times to avoid large spikes in activity
         Flynn.Timer(timeInterval: Double(rng.get(min: 1.0, max: 10.0)), repeats: false, self) { (_) in
@@ -49,12 +49,10 @@ class Bot: Actor {
     }
 
     private func joinGame(_ board: BoardUpdate) {
-        // TODO: Bots should favor joining the losing teams. Do this by given each team an inverse chance for a ticket in the raffle
         game.beAddPlayer(unsafeUUID, rng.get(min: 0, max: 3), playerName, true, self) { (_) in }
     }
 
     private func performTurn(_ player: Player, _ board: BoardUpdate) {
-        // TODO: Bots should behave at least somewhat intelligently; for now, we're just doing random things!
         if rng.maybe(0.2) {
             doNothing(player, board)
         } else {

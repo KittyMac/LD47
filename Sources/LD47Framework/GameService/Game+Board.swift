@@ -5,6 +5,8 @@ import PicaroonFramework
 import Pamphlet
 
 // swiftlint:disable identifier_name
+// swiftlint:disable cyclomatic_complexity
+// swiftlint:disable function_body_length
 
 typealias NodeIndex = Int
 let kNoNode: NodeIndex = Int(UInt16.max)

@@ -63,7 +63,7 @@ class Player: Codable {
     func updateHint() {
         let t = ProcessInfo.processInfo.systemUptime
 
-        let timeLeft = Int((8.0 - (t - lastMoveTime)))
+        let timeLeft = Int((7.0 - (t - lastMoveTime)))
 
         if timeLeft > 5 {
             hint = ""

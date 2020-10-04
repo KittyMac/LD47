@@ -58,8 +58,11 @@
                                         
                 </div>
             </div>
-            <div class="center" style="height:30px; width:100%; margin-top:20px; margin-bottom:10px">
-                Made by Rocco Bowling in less than 48 hours for <a href="https://ldjam.com"> Ludum Dare 47</a>
+            <div class="center" style="height:30px; width:100%; margin-top:20px">
+                Made by <a href="https://github.com/KittyMac/">Rocco Bowling</a> in less than 48 hours for <a href="https://ldjam.com"> Ludum Dare 47</a>
+            </div>
+            <div class="center" style="height:30px; width:100%; margin-bottom:10px">
+                <a href="https://github.com/KittyMac/flynn">Flynn</a>  -  <a href="https://swift.org">Swift</a> - <a href="https://www.pixijs.com">PixiJS</a> - <a href="https://www.raspberrypi.org">Raspberry Pi</a>
             </div>
         </div>
         
@@ -94,29 +97,40 @@
         const gameContainer = new PIXI.Container();
         app.stage.addChild(gameContainer);
         
+        const lastWinnerText = new PIXI.Text("", {fontFamily : 'Helvetica', fontSize: 18, fill : 0xFFFFFF, align : 'left'});
+        lastWinnerText.anchor.set(0.0, 0.0);
+        lastWinnerText.x = 10.0
+        lastWinnerText.y = (20.0 * 0.0) + 6.0
+        app.stage.addChild(lastWinnerText);
+        
+        const adminMessageText = new PIXI.Text("", {fontFamily : 'Helvetica', fontSize: 18, fill : 0x888888, align : 'left'});
+        adminMessageText.anchor.set(0.0, 0.0);
+        adminMessageText.x = 10.0
+        adminMessageText.y = (20.0 * 1.0) + 6.0
+        app.stage.addChild(adminMessageText);
         
         const score0Text = new PIXI.Text("SCORE: ", {fontFamily : 'Helvetica', fontSize: 18, fill : 0x2ca51f, align : 'left'});
         score0Text.anchor.set(0.0, 0.0);
         score0Text.x = 10.0
-        score0Text.y = 6.0
+        score0Text.y = (20.0 * 3.0) + 6.0
         app.stage.addChild(score0Text);
         
         const score1Text = new PIXI.Text("SCORE: ", {fontFamily : 'Helvetica', fontSize: 18, fill : 0xc0432e, align : 'left'});
         score1Text.anchor.set(0.0, 0.0);
         score1Text.x = 10.0
-        score1Text.y = 26.0
+        score1Text.y = (20.0 * 4.0) + 6.0
         app.stage.addChild(score1Text);
         
         const score2Text = new PIXI.Text("SCORE: ", {fontFamily : 'Helvetica', fontSize: 18, fill : 0x1f71a5, align : 'left'});
         score2Text.anchor.set(0.0, 0.0);
         score2Text.x = 10.0
-        score2Text.y = 46.0
+        score2Text.y = (20.0 * 5.0) + 6.0
         app.stage.addChild(score2Text);
         
         const score3Text = new PIXI.Text("SCORE: ", {fontFamily : 'Helvetica', fontSize: 18, fill : 0xecd034, align : 'left'});
         score3Text.anchor.set(0.0, 0.0);
         score3Text.x = 10.0
-        score3Text.y = 66.0
+        score3Text.y = (20.0 * 6.0) + 6.0
         app.stage.addChild(score3Text);
         
         
@@ -348,10 +362,12 @@
                 closeWelcomeDialog();
             }
             
-            score0Text.text = "SCORE: " + board.scores[0]
-            score1Text.text = "SCORE: " + board.scores[1]
-            score2Text.text = "SCORE: " + board.scores[2]
-            score3Text.text = "SCORE: " + board.scores[3]
+            adminMessageText.text = board.adminMessage;
+            lastWinnerText.text = board.lastWinner;
+            score0Text.text = "SCORE: " + board.scores[0];
+            score1Text.text = "SCORE: " + board.scores[1];
+            score2Text.text = "SCORE: " + board.scores[2];
+            score3Text.text = "SCORE: " + board.scores[3];
             
             // handle any events which were sent along with this update
             let eventPlayerKills = board.eventPlayerKills;
