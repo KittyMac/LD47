@@ -143,6 +143,19 @@
         
         const playersContainer = new PIXI.Container();
         gameContainer.addChild(playersContainer);
+        
+        
+        const particleContainer = new PIXI.ParticleContainer(10000, {
+            scale: true,
+            position: true,
+            rotation: true,
+            uvs: true,
+            alpha: true,
+        });
+        gameContainer.addChild(particleContainer);
+        
+        
+        
                 
         function animationUpdate() {
             // 0. Did the screen change size since the last time we drew the board? if so, we
@@ -199,10 +212,27 @@
             
             
             if (hasPlayer == false) {
-                let node = {x:6000, y:6000}
+                let node = {x:3000, y:3000}
                 let pos = getNodePos(node);
                 gameContainer.x = -(pos[0] - app.renderer.width / 2)
                 gameContainer.y = -(pos[1] - app.renderer.height / 2)
+            }
+            
+            // update all particles
+            for (i in particleContainer.children) {
+                let particle = particleContainer.children[i]
+                particle.currentLife -= 16
+                
+                if (particle.currentLife <= 0) {
+                    particle.parent.removeChild(particle);
+                } else {
+                    particle.velocity[0] *= particle.friction;
+                    particle.velocity[1] *= particle.friction;
+                    particle.x += particle.velocity[0];
+                    particle.y += particle.velocity[1];
+                    particle.rotation += particle.velocity[0] / 6;
+                    particle.alpha = particle.currentLife / particle.totalLife;
+                }
             }
         }
         
@@ -229,6 +259,30 @@
         
         function getNodePos(node) {
             return [node.x * kBoardToScreen, node.y * kBoardToScreen]
+        }
+        
+        function explode(team, x, y, num) {
+            for (i = 0; i < num; i++) {
+                let star = makeSprite(app, "star");
+                star.width = kPlayerSize * 0.5;
+                star.height = kPlayerSize * 0.5;
+                star.totalLife = 1200;
+                star.currentLife = star.totalLife;
+                star.velocity = [Math.random() * 12 - 6, Math.random() * 12 - 6]
+                star.friction = 0.95;
+                star.x = x + star.velocity[0] * 3.0;
+                star.y = y + star.velocity[1] * 3.0;
+                if (team == 0) {
+                    star.tint = 0x40eb2d;
+                } else if (team == 1) {
+                    star.tint = 0xef634b;
+                } else if (team == 2) {
+                    star.tint = 0x309fe6;
+                } else if (team == 3) {
+                    star.tint = 0xf8ea9b;
+                }
+                particleContainer.addChild(star);
+            }
         }
         
         function updateBoard(board) {
@@ -372,7 +426,14 @@
             let eventPlayerKills = board.eventPlayerKills;
             for (i in eventPlayerKills) {
                 let event = eventPlayerKills[i];
-                print(event);
+                
+                let playerKilled = event.player;
+                let node = getNodeByIdx(nodes, playerKilled.nodeIdx);
+                
+                if (node != undefined) {
+                    let pos = getNodePos(node);
+                    explode(playerKilled.teamId, pos[0], pos[1], 6);
+                }
             }
         }
         
@@ -494,6 +555,7 @@
         .add("player1", "player1.png")
         .add("player2", "player2.png")
         .add("player3", "player3.png")
+        .add("star", "star.png")
         .load((loader, resources) => {
             pixiFinishedLoading = true;
             

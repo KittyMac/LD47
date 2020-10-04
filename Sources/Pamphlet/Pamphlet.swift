@@ -40,6 +40,7 @@ public enum Pamphlet {
         case "/player1.png": return Pamphlet.Player1Png()
         case "/player2.png": return Pamphlet.Player2Png()
         case "/player3.png": return Pamphlet.Player3Png()
+        case "/star.png": return Pamphlet.StarPng()
         default: break
         }
         return nil
