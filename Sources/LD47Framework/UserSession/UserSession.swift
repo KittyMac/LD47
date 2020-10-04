@@ -18,7 +18,7 @@ public class LD47UserSession: UserSession {
         switch httpRequest.flynnTag {
         case "GetBoard":
 
-            var waitTime = 0.1
+            var waitTime = 0.05
             if firstUpdate {
                 waitTime = 0.0
                 connection.beSetTimeout(60 * 5)

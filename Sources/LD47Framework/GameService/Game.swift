@@ -83,6 +83,10 @@ class Game: Actor {
         }
         let player = Player(playerID, teamId, playerName)
         player.nodeIdx = getSpawnIdx()
+
+        let playerNode = safeNodes[player.nodeIdx]
+        registerPlayerMove(player, playerNode.d)
+
         safePlayers[playerID] = player
         eventPlayerKills[playerID] = []
         eventPlayerBonuses[playerID] = []
@@ -160,6 +164,7 @@ class Game: Actor {
     private func _beMovePlayer(_ playerID: String, _ nodeIdx: Int, _ visWidth: Int, _ visHeight: Int) -> BoardUpdate? {
         if let player = safePlayers[playerID] {
             let playerNode = safeNodes[player.nodeIdx]
+            let nextNode = safeNodes[nodeIdx]
 
             // the player may not move when they are in transit
             if player.inTransit {
@@ -176,8 +181,11 @@ class Game: Actor {
                 return nil
             }
 
+            player.hint = ""
             player.nodeIdx = nodeIdx
             player.inTransit = true
+
+            registerPlayerMove(player, nextNode.d)
 
             Flynn.Timer(timeInterval: kTransitTime, repeats: false, self) { (_) in
                 self.completePlayerTransit(player)
@@ -188,6 +196,19 @@ class Game: Actor {
         }
 
         return nil
+    }
+
+    private func registerPlayerMove(_ player: Player, _ distance: Int) {
+        player.playerDidMove(distance)
+
+        Flynn.Timer(timeInterval: 1.0, repeats: false, self) { (_) in player.updateHint() }
+        Flynn.Timer(timeInterval: 2.0, repeats: false, self) { (_) in player.updateHint() }
+        Flynn.Timer(timeInterval: 3.0, repeats: false, self) { (_) in player.updateHint() }
+        Flynn.Timer(timeInterval: 4.0, repeats: false, self) { (_) in player.updateHint() }
+        Flynn.Timer(timeInterval: 5.0, repeats: false, self) { (_) in player.updateHint() }
+        Flynn.Timer(timeInterval: 6.0, repeats: false, self) { (_) in player.updateHint() }
+        Flynn.Timer(timeInterval: 7.0, repeats: false, self) { (_) in player.updateHint() }
+        Flynn.Timer(timeInterval: 8.0, repeats: false, self) { (_) in player.updateHint() }
     }
 
     private func completePlayerTransit(_ player: Player) {

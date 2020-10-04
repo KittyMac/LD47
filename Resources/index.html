@@ -18,12 +18,12 @@
     
 	<div id="welcomeDialog">
         
-        <div class="vstack">
+        <div class="vstack" style="height:100%;margin-left:30px; margin-right:30px">
             <div class="center" style="height:60px; width:100%">
                 <h3>Escape the Loop</h3>
             </div>
             <div class="hstack">
-                <div class="vstack center" style="width:50%">
+                <div class="vstack center" style="width:50%;margin-right:10px">
                     <input id="playerName" type="text" placeholder="Player Name" required="true">
                     
                     <div class="hstack center grow" style="width:73%">
@@ -36,22 +36,22 @@
                     <button id="playButton" >PLAY</button>
                     
                 </div>
-                <div class="vstack" style="width:50%">
-                    <strong style="text-align: center;">Enter Name • Select Team • Press Play</strong>
+                <div class="vstack" style="width:50%;margin-left:10px">
+                    <h3 style="text-align: center;">Enter Name - Select Team - Press Play</h3>
                     
+                    Work with your team to garner enough points to win the round. Earn points by landing on other players or finding the hidden exit.
                     <p>
+                    First team to <strong>10,000</strong> points wins the round and the game resets. If you need help finding the exit, simply
+                    remains still for 5 seconds and the number of connections between you and the exit will be displayed.
+
                     <ul>
-                        <li>5 pts for landing on another player
-                        <li>150 pts for escaping the loop
-                    </ul>
-                    <ul>
-                        <li>Game resets when a team scores 100,000 points
-                        <li>Remain still for 10 seconds to scan for information of where the exit is
+                        <li><strong>150 Points</strong> - Escaping through the hidden exit
+                        <li><strong>5 Points</strong> - Land on another player
                     </ul>
                                         
                 </div>
             </div>
-            <div class="center" style="height:30px; width:100%; margin-top:20px">
+            <div class="center" style="height:30px; width:100%; margin-top:20px; margin-bottom:10px">
                 Made by Rocco Bowling in less than 48 hours for <a href="https://ldjam.com"> Ludum Dare 47</a>
             </div>
         </div>
@@ -266,7 +266,8 @@
                 let pos = getNodePos(playerNode);
                 nodeText.x = pos[0];
                 nodeText.y = pos[1] + kPlayerSize * 0.75;
-                nodeText.text = playerNode.d;
+                
+                nodeText.text = thisPlayer.hint;
             }
             
             // flag player containers so we can remove the ones which are no longer visible

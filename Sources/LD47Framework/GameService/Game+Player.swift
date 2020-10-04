@@ -12,6 +12,11 @@ class Player: Codable {
     var teamId: Int = 0
     var nodeIdx: Int = 0
     var inTransit: Bool = false
+    var hint: String = ""
+
+    // Neat trick: lazy properties are excluded from codable
+    public lazy var lastMoveTime: TimeInterval = 0.0
+    public lazy var distanceToExit: Int = 0
 
     init(_ id: String, _ teamId: Int, _ name: String) {
         self.id = id
@@ -42,6 +47,26 @@ class Player: Codable {
             if let randomName = randomNames.randomElement() {
                 self.name = randomName
             }
+        }
+    }
+
+    func playerDidMove(_ distanceToExit: Int) {
+        self.distanceToExit = distanceToExit
+        lastMoveTime = ProcessInfo.processInfo.systemUptime
+        updateHint()
+    }
+
+    func updateHint() {
+        let t = ProcessInfo.processInfo.systemUptime
+
+        let timeLeft = Int((7.0 - (t - lastMoveTime)))
+
+        if timeLeft > 4 {
+            hint = ""
+        } else if timeLeft > 0 {
+            hint = "\(timeLeft)s"
+        } else {
+            hint = "\(distanceToExit) moves\nto the exit"
         }
     }
 }
