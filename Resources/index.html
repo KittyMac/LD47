@@ -72,17 +72,16 @@
         print = console.log
         
         // The conversion from board units to screen units
-        const kBoardToScreen = 50;
-        const kNodeSize = 20;
-        const kPlayerSize = 65;
+        var kBoardToScreen = 50;
+        var kNodeSize = 20;
+        var kPlayerSize = 65;
         
         //const kBoardToScreen = 10
         //const kNodeSize = 4
         //const kPlayerSize = 7
         
         var lastBoardUpdate = undefined;
-        var lastBoardUpdateCX = 0;
-        var lastBoardUpdateCY = 0;
+        var lastBoardUpdateScreenDim = 0;
         
         var playerCanMove = false;
         
@@ -104,8 +103,16 @@
             // should redraw it so that it stays centered
             let cx = app.renderer.width / 2
             let cy = app.renderer.height / 2
+            let dim = Math.floor(app.renderer.width) * Math.floor(app.renderer.height);
             
-            if (lastBoardUpdateCX != cx || lastBoardUpdateCY != cy) {
+            var animationDelta = 0.06135;
+            
+            if (lastBoardUpdateScreenDim != dim) {
+                animationDelta = 1.0;
+                
+                // we want to display X number of board tiles regardless of the size of the screen...
+                kBoardToScreen = Math.max(app.renderer.width, app.renderer.height) / 36;
+                                
                 updateBoard(lastBoardUpdate);
             }
             
@@ -114,8 +121,8 @@
             for (j in playersContainer.children) {
                 let playerContainer = playersContainer.children[j];
                 
-                playerContainer.x += (playerContainer.targetX - playerContainer.x) * 0.06135;
-                playerContainer.y += (playerContainer.targetY - playerContainer.y) * 0.06135;
+                playerContainer.x += (playerContainer.targetX - playerContainer.x) * animationDelta;
+                playerContainer.y += (playerContainer.targetY - playerContainer.y) * animationDelta;
                 
                 let dx = Math.abs(playerContainer.targetX - playerContainer.x);
                 let dy = Math.abs(playerContainer.targetY - playerContainer.y);
@@ -185,13 +192,14 @@
         }
         
         function updateBoard(board) {
+            let dim = Math.floor(app.renderer.width) * Math.floor(app.renderer.height);
+            lastBoardUpdateScreenDim = dim
+            
             if (board == undefined) {
                 return;
             }
             
-            lastBoardUpdate = board;            
-            lastBoardUpdateCX = app.renderer.width;
-            lastBoardUpdateCY = app.renderer.height;
+            lastBoardUpdate = board;
             
             // -1. we want to center the board around the player's nodeidx
             let nodes = board.nodes;
