@@ -231,6 +231,9 @@ class Game: Actor {
             scores[player.teamId] += kScorePerPlayerExit
             recordEventPlayerBonus(player)
             player.nodeIdx = getSpawnIdx()
+
+            let playerNode = safeNodes[player.nodeIdx]
+            registerPlayerMove(player, playerNode.d)
         }
     }
 

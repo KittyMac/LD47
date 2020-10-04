@@ -9,7 +9,7 @@ upstream ld47 {
 }
 
 server {
-    listen 80;
+    listen 9687;
 
     location / {
         proxy_pass http://ld47;
