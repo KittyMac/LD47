@@ -19,6 +19,7 @@ let kResetScoreTotal = 25_000
 let kResetScoreTotal = 25_000
 #endif
 
+private var lastWinnerString = "This is the first round; go, Go, GO!"
 private var allTimeHumanIDs: [String: Bool] = [:]
 
 struct BoardUpdate: Codable {
@@ -44,7 +45,6 @@ struct PlayerInfo: Codable {
 
 class Game: Actor {
 
-    private var lastWinnerString = "This is the first round; go, Go, GO!"
     private var lastAdminMessageString = ""
 
     private let kScorePerPlayerKill = 5
@@ -72,6 +72,10 @@ class Game: Actor {
 
     override init() {
         super.init()
+    }
+
+    deinit {
+        print("deinit - game")
     }
 
     init(_ seed: Int, _ numNodes: Int, _ numBots: Int) {
@@ -343,7 +347,7 @@ class Game: Actor {
             case 1: lastWinnerString = "Team RED won the last round in \(roundTimeInMinutes) minute\(plural)!"
             case 2: lastWinnerString = "Team BLUE won the last round in \(roundTimeInMinutes) minute\(plural)!"
             case 3: lastWinnerString = "Team YELLOW won the last round in \(roundTimeInMinutes) minute\(plural)!"
-            default: lastWinnerString = "(no previous winner)"
+            default: lastWinnerString = "This is the first round; go, Go, GO!"
             }
 
             // 0. flag this game as being over

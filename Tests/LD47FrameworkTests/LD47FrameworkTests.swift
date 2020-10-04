@@ -1,7 +1,16 @@
 import XCTest
+import Flynn
 @testable import LD47Framework
 
 final class LD47FrameworkTests: XCTestCase {
+    
+    override func setUp() {
+        Flynn.startup()
+    }
+
+    override func tearDown() {
+        Flynn.shutdown()
+    }
     
     func testGameGeneration() {
         
@@ -17,6 +26,14 @@ final class LD47FrameworkTests: XCTestCase {
             }
         }
 
+    }
+    
+    func testGameDeinit() {
+        
+        for _ in 0..<10 {
+            let game = Game(42, 4000, 42)
+        }
+        
     }
     
     func testRNG() {
