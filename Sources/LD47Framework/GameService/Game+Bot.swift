@@ -14,13 +14,13 @@ class Bot: Actor {
 
     private let game: Game
     private var playerName: String
-    private var rng: Randomable = Xoroshiro128Plus()
+    private var rng: Randomable
     private let visRange = 70
 
     init(_ game: Game, _ seed: UInt64) {
         self.game = game
         self.playerName = ""
-        self.rng = Xoroshiro128Plus(seed)
+        self.rng = Xoroshiro256StarStar(seed)
         super.init()
 
         self.playerName = "\(self)"
@@ -47,7 +47,9 @@ class Bot: Actor {
 
     private func joinGame(_ board: BoardUpdate) {
         // TODO: Bots should favor joining the losing teams. Do this by given each team an inverse chance for a ticket in the raffle
-        game.beAddPlayer(unsafeUUID, rng.get(min: 0, max: 3), playerName, self) { (_) in }
+        let teamID: Int = rng.get(min: 0, max: 3)
+        print("Bot joining teamID: \(teamID)")
+        game.beAddPlayer(unsafeUUID, teamID, playerName, self) { (_) in }
     }
 
     private func performTurn(_ player: Player, _ board: BoardUpdate) {

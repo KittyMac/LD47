@@ -90,7 +90,7 @@ extension Game {
     }
 
     public func safeGenerate(_ seed: Int, _ targetNodes: Int) {
-        let rng: Randomable = Xoroshiro128Plus("\(seed)")
+        let rng: Randomable = Xoroshiro256StarStar("\(seed)")
 
         safeNodeMap = [UInt16](repeating: UInt16(kNoNode), count: kMaxMapSize * kMaxMapSize)
 

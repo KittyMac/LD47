@@ -37,7 +37,7 @@
                     
                 </div>
                 <div class="vstack" style="width:50%">
-                    <strong>Enter Name • Select Team • Press Play</strong>
+                    <strong style="text-align: center;">Enter Name • Select Team • Press Play</strong>
                     
                     <p>
                     <ul>
@@ -177,8 +177,9 @@
                 }
             }
             
+            
             if (hasPlayer == false) {
-                let node = {x:10000, y:10000}
+                let node = {x:6000, y:6000}
                 let pos = getNodePos(node);
                 gameContainer.x = -(pos[0] - app.renderer.width / 2)
                 gameContainer.y = -(pos[1] - app.renderer.height / 2)

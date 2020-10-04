@@ -96,27 +96,27 @@ delete-cluster: delete-nginx delete-http1 delete-http2 delete-game1 delete-http3
 
 
 update-nginx:
-	ssh ubuntu@192.168.1.210 "git clone https://github.com/KittyMac/LD47"
+	-ssh ubuntu@192.168.1.210 "git clone https://github.com/KittyMac/LD47"
 	ssh ubuntu@192.168.1.210 "cd LD47; git checkout .; git pull; make install-nginx"
 
 update-http1:
-	ssh ubuntu@192.168.1.211 "git clone https://github.com/KittyMac/LD47"
+	-ssh ubuntu@192.168.1.211 "git clone https://github.com/KittyMac/LD47"
 	ssh ubuntu@192.168.1.211 "cd LD47; git checkout .; git pull; make install-http"
 
 update-http2:
-	ssh ubuntu@192.168.1.212 "git clone https://github.com/KittyMac/LD47"
+	-ssh ubuntu@192.168.1.212 "git clone https://github.com/KittyMac/LD47"
 	ssh ubuntu@192.168.1.212 "cd LD47; git checkout .; git pull; make install-http"
 
 update-game1:
-	ssh ubuntu@192.168.1.213 "git clone https://github.com/KittyMac/LD47"
+	-ssh ubuntu@192.168.1.213 "git clone https://github.com/KittyMac/LD47"
 	ssh ubuntu@192.168.1.213 "cd LD47; git checkout .; git pull; make install-game"
 
 update-http3:
-	ssh ubuntu@192.168.1.214 "git clone https://github.com/KittyMac/LD47"
+	-ssh ubuntu@192.168.1.214 "git clone https://github.com/KittyMac/LD47"
 	ssh ubuntu@192.168.1.214 "cd LD47; git checkout .; git pull; make install-http"
 
 update-http4:
-	ssh ubuntu@192.168.1.215 "git clone https://github.com/KittyMac/LD47"
+	-ssh ubuntu@192.168.1.215 "git clone https://github.com/KittyMac/LD47"
 	ssh ubuntu@192.168.1.215 "cd LD47; git checkout .; git pull; make install-http"
 
 update-cluster: update-nginx update-http1 update-http2 update-game1 update-http3 update-http4
@@ -132,7 +132,7 @@ restart-http1:
 restart-http2:
 	ssh ubuntu@192.168.1.212 "sudo systemctl restart ld47_http"
 
-restart-game:
+restart-game1:
 	ssh ubuntu@192.168.1.213 "sudo systemctl restart ld47_game"
 
 restart-http3:

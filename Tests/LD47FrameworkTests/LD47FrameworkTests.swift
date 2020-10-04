@@ -13,7 +13,7 @@ final class LD47FrameworkTests: XCTestCase {
     
     func testRNG() {
         
-        let rng = Xoroshiro128Plus()
+        let rng = Xoroshiro256StarStar()
         
         for _ in 0..<100 {
             print(rng.get(min: 0, max: 3))

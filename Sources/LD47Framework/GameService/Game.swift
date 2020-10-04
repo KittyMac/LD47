@@ -46,7 +46,7 @@ class Game: Actor {
 
     public var safeMaxNodeDistance = 0
 
-    private let rng: Randomable = Xoroshiro128Plus()
+    private let rng: Randomable = Xoroshiro256StarStar()
 
     private var eventPlayerKills: [String: [EventPlayerKill]] = [:]
     private var eventPlayerBonuses: [String: [EventPlayerBonus]] = [:]
@@ -57,10 +57,6 @@ class Game: Actor {
 
     init(_ seed: Int, _ numNodes: Int, _ numBots: Int) {
         super.init()
-
-        for _ in 0..<100 {
-            print(rng.get(min: 0, max: 3))
-        }
 
         safeGenerate(seed, numNodes)
 
@@ -118,7 +114,7 @@ class Game: Actor {
         var visNodes: [Int: Node] = [:]
         var visPlayers: [Player] = []
 
-        safeNodesNear(playerNode.x, playerNode.y, visWidth/2, visHeight/2, &visNodes)
+        safeNodesNear(playerNode.x, playerNode.y, visWidth, visHeight, &visNodes)
 
         // 2. run back through the nodes, add any nodes which are connected to a visNode
         for node in visNodes.values {
@@ -167,6 +163,11 @@ class Game: Actor {
 
             // the player may not move when they are in transit
             if player.inTransit {
+                return nil
+            }
+
+            // the player may not "move" to the exact same spot
+            if player.nodeIdx == nodeIdx {
                 return nil
             }
 
