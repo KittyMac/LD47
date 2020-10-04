@@ -27,7 +27,7 @@ class Bot: Actor {
 
         // stagger bot start times to avoid large spikes in activity
         Flynn.Timer(timeInterval: Double(rng.get(min: 1.0, max: 10.0)), repeats: false, self) { (_) in
-            Flynn.Timer(timeInterval: kTransitTime + 0.3, repeats: true, self) { (_) in
+            Flynn.Timer(timeInterval: kTransitTime + 0.4, repeats: true, self) { (_) in
                 game.beGetBoardUpdate(self.unsafeUUID, self.visRange, self.visRange, self) { (board) in
                     if let board = board {
                         if let player = board.player {
@@ -55,6 +55,10 @@ class Bot: Actor {
     private func performTurn(_ player: Player, _ board: BoardUpdate) {
         if rng.maybe(0.2) {
             doNothing(player, board)
+        } else if rng.maybe(0.5) {
+            moveTowardsAnotherPlayer(player, board)
+        } else if rng.maybe(0.5) {
+            moveTowardsTheExit(player, board)
         } else {
             moveRandom(player, board)
         }
@@ -64,6 +68,54 @@ class Bot: Actor {
         if let playerNode = getNodeById(player.nodeIdx, board) {
             let nextNodeIdx = rng.get(playerNode.c)
             game.beMovePlayer(unsafeUUID, nextNodeIdx, visRange, visRange, self) { (_) in }
+        }
+    }
+
+    private func moveTowardsAnotherPlayer(_ player: Player, _ board: BoardUpdate) {
+        if let playerNode = getNodeById(player.nodeIdx, board) {
+
+            // find the "closest" player who is not of my team,
+            // not me, and not immune
+            var otherPlayersByNodeIdx: [Int: Player] = [:]
+
+            for other in board.players where
+                other.id != player.id &&
+                other.teamId != player.teamId &&
+                other.immune == false {
+                otherPlayersByNodeIdx[other.nodeIdx] = other
+            }
+
+            // check my neighbors; if a player is there go after them
+            for goToNodeIdx in playerNode.c where otherPlayersByNodeIdx[goToNodeIdx] != nil {
+                game.beMovePlayer(unsafeUUID, goToNodeIdx, visRange, visRange, self) { (_) in }
+                return
+            }
+
+            // otherwise, move randomly
+            moveRandom(player, board)
+        }
+    }
+
+    private func moveTowardsTheExit(_ player: Player, _ board: BoardUpdate) {
+        if let playerNode = getNodeById(player.nodeIdx, board) {
+
+            var myDistance = playerNode.d
+            var goToNodeIdx = playerNode.id
+            for otherIdx in playerNode.c {
+                if let otherNode = getNodeById(otherIdx, board) {
+                    if otherNode.d < myDistance {
+                        myDistance = otherNode.d
+                        goToNodeIdx = otherNode.id
+                    }
+                }
+            }
+
+            // if we didn't find any to move to, just choose a random one
+            if goToNodeIdx == player.nodeIdx {
+                goToNodeIdx = rng.get(playerNode.c)
+            }
+
+            game.beMovePlayer(unsafeUUID, goToNodeIdx, visRange, visRange, self) { (_) in }
         }
     }
 
