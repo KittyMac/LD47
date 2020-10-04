@@ -15,7 +15,7 @@ class GameService: RemoteActor {
 #if DEBUG
         game = Game(42, 50, 20)
 #else
-        game = Game(42, 10000, 150)
+        game = Game(42, 10000, 250)
 #endif
     }
 
