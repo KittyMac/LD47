@@ -15,3 +15,15 @@ class EventPlayerKill: Codable {
         self.score = score
     }
 }
+
+class EventPlayerBonus: Codable {
+    var tag = "EventPlayerBonus"
+
+    var player: Player
+    var score: Int
+
+    init(_ player: Player, _ score: Int) {
+        self.player = player
+        self.score = score
+    }
+}

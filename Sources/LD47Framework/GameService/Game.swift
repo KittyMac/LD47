@@ -18,6 +18,7 @@ struct BoardUpdate: Codable {
     var scores: [Int]
 
     var eventPlayerKills: [EventPlayerKill]?
+    var eventPlayerBonuses: [EventPlayerBonus]?
 }
 
 struct PlayerInfo: Codable {
@@ -38,6 +39,7 @@ class Game {
     let rng: Randomable = Xoroshiro128Plus()
 
     var eventPlayerKills: [String: [EventPlayerKill]] = [:]
+    var eventPlayerBonuses: [String: [EventPlayerBonus]] = [:]
 
     init() {
 
@@ -69,18 +71,27 @@ class Game {
         player.nodeIdx = getSpawnIdx()
         players[playerID] = player
         eventPlayerKills[playerID] = []
+        eventPlayerBonuses[playerID] = []
         return PlayerInfo(player: player)
     }
 
     func removePlayer(_ playerID: String) {
         players.removeValue(forKey: playerID)
         eventPlayerKills.removeValue(forKey: playerID)
+        eventPlayerBonuses.removeValue(forKey: playerID)
     }
 
-    func recordEventPlayerKill(_ deadPlayer: Player) {
-        let event = EventPlayerKill(deadPlayer, kScorePerPlayerKill)
+    func recordEventPlayerKill(_ player: Player) {
+        let event = EventPlayerKill(player, kScorePerPlayerKill)
         for key in eventPlayerKills.keys {
             eventPlayerKills[key]?.append(event)
+        }
+    }
+
+    func recordEventPlayerBonus(_ player: Player) {
+        let event = EventPlayerBonus(player, kScorePerPlayerKill)
+        for key in eventPlayerBonuses.keys {
+            eventPlayerBonuses[key]?.append(event)
         }
     }
 
@@ -122,6 +133,9 @@ class Game {
                 update.eventPlayerKills = eventPlayerKills[player.id]
                 eventPlayerKills[player.id]?.removeAll(keepingCapacity: true)
 
+                update.eventPlayerBonuses = eventPlayerBonuses[player.id]
+                eventPlayerBonuses[player.id]?.removeAll(keepingCapacity: true)
+
                 return update
             }
         }
@@ -151,6 +165,13 @@ class Game {
             }
 
             player.nodeIdx = nodeIdx
+
+            // did we reach the exit? it would be nice if the user had to sit on it or something...
+            if nodeIdx == 0 {
+                scores[player.teamId] += kScorePerPlayerExit
+                recordEventPlayerBonus(player)
+                player.nodeIdx = getSpawnIdx()
+            }
 
             // If we moved the player, then we should send back an updated gameboard
             return getBoardUpdate(playerID, visWidth, visHeight)

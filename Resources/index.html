@@ -20,7 +20,7 @@
         
         <div class="vstack">
             <div class="center" style="height:60px; width:100%">
-                <h3>QuantumLoop</h3>
+                <h3>Escape the Loop</h3>
             </div>
             <div class="hstack">
                 <div class="vstack center" style="width:50%">
@@ -73,7 +73,7 @@
         
         // The conversion from board units to screen units
         var kBoardToScreen = 50;
-        var kNodeSize = 20;
+        var kNodeSize = 10;
         var kPlayerSize = 65;
         
         //const kBoardToScreen = 10
@@ -172,7 +172,7 @@
                     gameContainer.x = -(playerContainer.x - app.renderer.width / 2)
                     gameContainer.y = -(playerContainer.y - app.renderer.height / 2)
                     
-                    if (dx < kNodeSize && dy < kNodeSize) {
+                    if (dx < kPlayerSize && dy < kPlayerSize) {
                         playerCanMove = true;
                     } else {
                         playerCanMove = false;
@@ -181,17 +181,10 @@
             }
             
             if (hasPlayer == false) {
-                // first find any player and center on them
-                if (playersContainer.children.length > 0) {
-                    let playerContainer = playersContainer.children[0];
-                    gameContainer.x = -(playerContainer.x - app.renderer.width / 2)
-                    gameContainer.y = -(playerContainer.y - app.renderer.height / 2)
-                } else {
-                    let node = {x:10000, y:10000}
-                    let pos = getNodePos(node);
-                    gameContainer.x = -(pos[0] - app.renderer.width / 2)
-                    gameContainer.y = -(pos[1] - app.renderer.height / 2)
-                }
+                let node = {x:10000, y:10000}
+                let pos = getNodePos(node);
+                gameContainer.x = -(pos[0] - app.renderer.width / 2)
+                gameContainer.y = -(pos[1] - app.renderer.height / 2)
             }
         }
         
@@ -274,7 +267,7 @@
                 let playerNode = getNodeByIdx(nodes, thisPlayer.nodeIdx);
                 let pos = getNodePos(playerNode);
                 nodeText.x = pos[0];
-                nodeText.y = pos[1] + kNodeSize * 2.5;
+                nodeText.y = pos[1] + kPlayerSize * 0.75;
                 nodeText.text = playerNode.d;
             }
             
@@ -310,7 +303,7 @@
                         
                         const nodeText = new PIXI.Text(player.name, {fontFamily : 'Helvetica', fontSize: 18, fill : 0xffffff, align : 'center'});
                         nodeText.anchor.set(0.5, 0.5);
-                        nodeText.y = kNodeSize * -2.0;
+                        nodeText.y = kPlayerSize * -0.75;
                         playerContainer.addChild(nodeText);
                         
                         playerContainer.playerID = player.id;
@@ -434,7 +427,7 @@
             
             // find the node nearest the click
             var clickNode = undefined
-            var clickNodeDistance = (kNodeSize * 6) * (kNodeSize * 6)
+            var clickNodeDistance = (kPlayerSize * 6) * (kPlayerSize * 6)
             let nodes = lastBoardUpdate.nodes;
             for (i in nodes) {
                 let node = nodes[i];
