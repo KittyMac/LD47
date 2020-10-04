@@ -49,7 +49,7 @@ a {
     outline: none;
     box-sizing: border-box;
     border: 2px solid rgba(0, 0, 0, 0.02);
-    margin-bottom: 50px;
+    margin-bottom: 20px;
     font-family: 'Ubuntu', sans-serif;
 }
 
@@ -58,7 +58,7 @@ a {
 	
 	font-family: zekton;
     
-    margin-top: 50px;
+    margin-top: 20px;
 
 	padding-left: 2em;
 	padding-right: 2em;
