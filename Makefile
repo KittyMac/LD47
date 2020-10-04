@@ -148,17 +148,17 @@ status-nginx:
 	echo "restart nginx not yet implemented"
 
 status-http1:
-	ssh ubuntu@192.168.1.211 "sudo systemctl status -n 3000 ld47_http"
+	ssh ubuntu@192.168.1.211 "sudo systemctl status -n 300000 ld47_http"
 
 status-http2:
-	ssh ubuntu@192.168.1.212 "sudo systemctl status -n 3000 ld47_http"
+	ssh ubuntu@192.168.1.212 "sudo systemctl status -n 300000 ld47_http"
 
 status-game1:
-	ssh ubuntu@192.168.1.213 "sudo systemctl status -n 3000 ld47_game"
+	ssh ubuntu@192.168.1.213 "sudo systemctl status -n 300000 ld47_game"
 
 status-http3:
-	ssh ubuntu@192.168.1.214 "sudo systemctl status -n 3000 ld47_http"
+	ssh ubuntu@192.168.1.214 "sudo systemctl status -n 300000 ld47_http"
 
 status-http4:
-	ssh ubuntu@192.168.1.215 "sudo systemctl status -n 3000 ld47_http"
+	ssh ubuntu@192.168.1.215 "sudo systemctl status -n 300000 ld47_http"
 

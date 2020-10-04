@@ -19,8 +19,6 @@ let kResetScoreTotal = 25_000
 let kResetScoreTotal = 25_000
 #endif
 
-private var lastWinnerString = "This is the first round; go, Go, GO!"
-private var lastAdminMessageString = ""
 private var allTimeHumanIDs: [String: Bool] = [:]
 
 struct BoardUpdate: Codable {
@@ -45,6 +43,10 @@ struct PlayerInfo: Codable {
 }
 
 class Game: Actor {
+
+    private var lastWinnerString = "This is the first round; go, Go, GO!"
+    private var lastAdminMessageString = ""
+
     private let kScorePerPlayerKill = 5
     private let kScorePerPlayerExit = 500
 
@@ -97,26 +99,28 @@ class Game: Actor {
     }
 
     private func updateAdminMessage() {
-        lastAdminMessageString = ""
+        var scratch = ""
 
         if currentNumberOfHumans == 1 {
-            lastAdminMessageString += "\(currentNumberOfHumans) human | "
+            scratch += "\(currentNumberOfHumans) human | "
         } else {
-            lastAdminMessageString += "\(currentNumberOfHumans) humans | "
+            scratch += "\(currentNumberOfHumans) humans | "
         }
 
         if currentNumberOfBots == 1 {
-            lastAdminMessageString += "\(currentNumberOfBots) bot | "
+            scratch += "\(currentNumberOfBots) bot | "
         } else {
-            lastAdminMessageString += "\(currentNumberOfBots) bots | "
+            scratch += "\(currentNumberOfBots) bots | "
         }
 
         let allTimeHumansCount = allTimeHumanIDs.count
         if allTimeHumansCount == 1 {
-            lastAdminMessageString += "\(allTimeHumansCount) human all time"
+            scratch += "\(allTimeHumansCount) human all time"
         } else {
-            lastAdminMessageString += "\(allTimeHumansCount) humans all time"
+            scratch += "\(allTimeHumansCount) humans all time"
         }
+
+        lastAdminMessageString = scratch
     }
 
     private func _beAddPlayer(_ playerID: String,

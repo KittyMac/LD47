@@ -5,8 +5,16 @@ final class LD47FrameworkTests: XCTestCase {
     
     func testGameGeneration() {
         
-        measure {
-            _ = Game(42, 5000, 0)
+        let options = XCTMeasureOptions()
+        options.iterationCount = 10000
+        if #available(OSX 10.15, *) {
+            self.measure(options: options, block: {
+                _ = Game(42, 4000, 250)
+            })
+        } else {
+            self.measure() {
+                _ = Game(42, 4000, 250)
+            }
         }
 
     }
