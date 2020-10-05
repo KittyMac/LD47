@@ -27,6 +27,8 @@ class Bot: Actor, Timerable {
         self.rng = Xoroshiro256StarStar(seed)
         super.init()
 
+        self.unsafePriority = -1
+
         self.playerName = "BOT"
 
         // stagger bot start times to avoid large spikes in activity

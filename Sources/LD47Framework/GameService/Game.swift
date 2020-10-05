@@ -81,6 +81,8 @@ class Game: Actor {
     init(_ seed: Int, _ numNodes: Int, _ numBots: Int) {
         super.init()
 
+        self.unsafePriority = 99
+
         safeGenerate(seed, numNodes)
 
         for _ in 0..<numBots {

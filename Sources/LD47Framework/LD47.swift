@@ -28,6 +28,7 @@ public enum LD47Server {
 
     public static func http(_ address: String,
                             _ port: Int) {
+        Connection.defaultTimeout = 60 * 5
 
 #if DEBUG
         Flynn.Node.connect("127.0.0.1", 9090, [GameService.self], false)
@@ -41,6 +42,7 @@ public enum LD47Server {
     }
 
     public static func game(_ roots: [String]) {
+        Connection.defaultTimeout = 60 * 5
 
         // set up the services we offer to our remotes:
         let gameService = GameService(GameService.serviceName)
