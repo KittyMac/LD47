@@ -6,7 +6,7 @@ After=network-online.target
 [Service]
 ExecStart=/home/ubuntu/LD47/.build/release/LD47 game 192.168.1.211:9090 192.168.1.212:9090 192.168.1.214:9090 192.168.1.215:9090
 Restart=always
-RestartSec=3
+RestartSec=12
 
 [Install]
 WantedBy=default.target

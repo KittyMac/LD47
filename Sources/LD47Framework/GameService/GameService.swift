@@ -43,11 +43,7 @@ class GameService: RemoteActor {
                              _ returnCallback: @escaping (String) -> Void) {
         if let game = game {
             if game.unsafeGameOver {
-#if DEBUG
                 reset()
-#else
-                exit(1)
-#endif
             }
             game.beGetBoardUpdate(playerID, visWidth, visHeight, Flynn.any) {
                 returnCallback((try? $0.json()) ?? "")
