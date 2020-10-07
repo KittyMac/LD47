@@ -10,6 +10,7 @@ import Pamphlet
 
 public class LD47UserSession: UserSession {
 
+    private var timeIntervalOfLastUpdate: TimeInterval = 0.0
     private var firstUpdate = true
     private var lastVisibleBoardWidth: Int = 100
     private var lastVisibleBoardHeight: Int = 100
@@ -18,9 +19,7 @@ public class LD47UserSession: UserSession {
         switch httpRequest.flynnTag {
         case "GetBoard":
 
-            var waitTime = 0.1
             if firstUpdate {
-                waitTime = 0.0
                 connection.beSetTimeout(60 * 5)
                 firstUpdate = false
             }
@@ -35,7 +34,12 @@ public class LD47UserSession: UserSession {
                 lastVisibleBoardWidth = Int(request.w)
                 lastVisibleBoardHeight = Int(request.h)
 
-                Flynn.Timer(timeInterval: waitTime, repeats: false, self) { (_) in
+                // We want to rate limit the gameboard updates to only allow 10 updates
+                // per second. However, we don't want to penalize users for lag.
+                let timeToWait = max(min(0.1 - (ProcessInfo.processInfo.systemUptime - timeIntervalOfLastUpdate), 1), 0)
+
+                Flynn.Timer(timeInterval: timeToWait, repeats: false, self) { (_) in
+                    self.timeIntervalOfLastUpdate = ProcessInfo.processInfo.systemUptime
                     Flynn.Root.remoteActorByUUID(GameService.serviceName, self) {
                         if let game = $0 as? GameService {
                             game.beGetBoard(self.unsafeSessionUUID,
