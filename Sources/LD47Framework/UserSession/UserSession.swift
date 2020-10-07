@@ -10,7 +10,10 @@ import Pamphlet
 
 public class LD47UserSession: UserSession {
 
-    private var timeIntervalOfLastUpdate: TimeInterval = 0.0
+    private var lastUpdateTime: TimeInterval = ProcessInfo.processInfo.systemUptime
+    private var roundTripRunningAvg: TimeInterval = 0.1
+    private var currentWaitTime: TimeInterval = 0.1
+
     private var firstUpdate = true
     private var lastVisibleBoardWidth: Int = 100
     private var lastVisibleBoardHeight: Int = 100
@@ -34,13 +37,21 @@ public class LD47UserSession: UserSession {
                 lastVisibleBoardWidth = Int(request.w)
                 lastVisibleBoardHeight = Int(request.h)
 
-                // We want to rate limit the gameboard updates to only allow 10 updates
-                // per second. However, we don't want to penalize users for lag.
-                let timeToWait = max(min(0.1 - (ProcessInfo.processInfo.systemUptime - timeIntervalOfLastUpdate), 1), 0)
+                // Our goal is to deliver updates to the user 10 times per second. To do this, we need to keep a
+                // running average of the round trip time and constantly adjust our wait time so that the total
+                // round trip time is 0.1 seconds
+                let now = ProcessInfo.processInfo.systemUptime
+                let roundTripTime = min(max(now - lastUpdateTime, 0), 1)
+                self.lastUpdateTime = now
 
-                Flynn.Timer(timeInterval: timeToWait, repeats: false, self) { (_) in
-                    self.timeIntervalOfLastUpdate = ProcessInfo.processInfo.systemUptime
+                roundTripRunningAvg = ((roundTripRunningAvg * 8.0) + roundTripTime) / 9.0
 
+                // if roundTripRunningAvg > 0.1, then we need to reduce our wait time.  if its < 0.1, then
+                // we need to increase our wait time.
+                let waitTimeDelta = (0.1 - roundTripRunningAvg) * 0.25
+                currentWaitTime += waitTimeDelta
+
+                Flynn.Timer(timeInterval: currentWaitTime, repeats: false, self) { (_) in
                     Flynn.Root.remoteActorByUUID(GameService.serviceName, self) {
                         if let game = $0 as? GameService {
                             game.beGetBoard(self.unsafeSessionUUID,

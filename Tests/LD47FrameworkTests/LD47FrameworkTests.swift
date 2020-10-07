@@ -31,7 +31,7 @@ final class LD47FrameworkTests: XCTestCase {
     func testGameDeinit() {
         
         for _ in 0..<10 {
-            let game = Game(42, 4000, 42)
+            _ = Game(42, 4000, 42)
         }
         
     }
