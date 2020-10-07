@@ -48,7 +48,7 @@ public class LD47UserSession: UserSession {
 
                 // if roundTripRunningAvg > 0.1, then we need to reduce our wait time.  if its < 0.1, then
                 // we need to increase our wait time.
-                let waitTimeDelta = (0.1 - roundTripRunningAvg) * 0.25
+                let waitTimeDelta = (0.1 - roundTripRunningAvg) * 0.125
                 currentWaitTime += waitTimeDelta
 
                 Flynn.Timer(timeInterval: currentWaitTime, repeats: false, self) { (_) in
