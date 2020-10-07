@@ -13,6 +13,14 @@ class GameService: RemoteActor {
 
     override func safeInit() {
         reset()
+
+        Flynn.Timer(timeInterval: 5.0, repeats: true, safeActor) { (_) in
+            if let game = self.game {
+                if game.unsafeGameOver {
+                    self.reset()
+                }
+            }
+        }
     }
 
     private func reset() {
@@ -42,9 +50,6 @@ class GameService: RemoteActor {
                              _ visHeight: Int,
                              _ returnCallback: @escaping (String) -> Void) {
         if let game = game {
-            if game.unsafeGameOver {
-                reset()
-            }
             game.beGetBoardUpdate(playerID, visWidth, visHeight, Flynn.any) {
                 returnCallback((try? $0.json()) ?? "")
             }

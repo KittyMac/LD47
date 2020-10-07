@@ -15,7 +15,7 @@
         "repositoryURL": "https://github.com/KittyMac/Flynn.git",
         "state": {
           "branch": "master",
-          "revision": "61c381747eacb789ef3926d54dad8f39e5b4cace",
+          "revision": "1d2dc23a2a024f2bd71326821f5ef95b987ad948",
           "version": null
         }
       },
@@ -33,7 +33,7 @@
         "repositoryURL": "https://github.com/KittyMac/Picaroon.git",
         "state": {
           "branch": "master",
-          "revision": "53c79146eb520f4cfa735172a45d937d2307685b",
+          "revision": "59022c90d85b90a1912e384ee64abb120c92f68b",
           "version": null
         }
       },
