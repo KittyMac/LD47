@@ -32,11 +32,11 @@ function gameUpdateLongPoll(callback) {
     xhttp.onreadystatechange = function() {
         if (this.readyState == 4) {
             if (this.status == 200) {
+                setTimeout(function() { gameUpdateLongPoll(callback) }, 1);
                 let responseJson = JSON.parse(this.responseText);
                 if (responseJson != undefined) {
                     callback(responseJson);
                 }
-                setTimeout(function() { gameUpdateLongPoll(callback) }, 1);
             } else {
                 setTimeout(function() { gameUpdateLongPoll(callback) }, 1000);
             }
@@ -104,4 +104,4 @@ public extension Pamphlet {
     }
 }
 
-private let gzip_data = Data(base64Encoded:"H4sIAAAAAAACA+VUTY+bMBC951e4nIgUkmzVQ5UVl0bd7kb7ETWs1KsLE3AXbGqbTaKK/75jPrJAaOlue6nqAwj7vTeD581sM+5rJjgJaQL3aUA1XAserkUc2z6N46/UfxiTHwTXyDweqST7SOuUuITDjny5ub7Er8/wPQOl7fF5gSoQU8El0OCgNIr6EeUhIGlbBbRRtcCaxbbE1hFT04KwMQTiuuRdE9PCGc1MGczb+byLMisGTSSoVHAFK4X/55LV5u52mlKpoI5VHnuw11Xe3VgthTcuyXgAW8Yh6AtpVn1lLWaPeH6yo0B7LAGRabt5Rb+uSz4hZx31nECsoCe9VweY4w13YrS+Ru3tvGWBFLhtre82njUh1sxq+QMzqnxziWUHaVsX8YFzx6OhQX8C/UFQGQyR1pKGCTUMLhyf+hEMMT7uU4YFMhTnbAi8NIrOUnAtRfySKIYCXDveIQXDo2kaM5+ai599Q1ucY0+gGbV7710472u1Ue1eXyQJ5QEa97mWuwVBFXQu+lCCnO5YoCMyIw/FRXli40sAPjniow4+AhZG+oRwWjeFDLtoGKUl4yHbHuwqoTEmmo9GtYeIgS7Loxpyi5aa1D9gOmBCGrPkn5ojBlnn/lsT4M8Hz6uHz0sGUP8Qyn/S5n+3sxsu+a9ae7C1ilp12ktCyJQGuY7pAUPzorU00OQqOO2qZi9aJWMlGMcUnx2TFtvm8heF2PGgFF2Ur7LgjQitpBLxCHVCIoCrYD+Qy82R0MqlIi+qd0/QJ6QDpN+gCAAA")
+private let gzip_data = Data(base64Encoded:"H4sIAAAAAAACA+VUTY/aMBC98yumOQWJAFv1ULHKpajbXbQfqGSlXt1kSNxN7NQ2u6CK/95xPtgYUOn241DVByLs92aex29muRKx4VJAygq8LxNm8FqKdC7z3I9Znn9m8UMfvgGtnv15ZArWmTElhCDwCT7dXF/Sv4/4dYXa+P3zClUhhlIoZMlGGwoaZ0ykSKRlk9CnqBXWLr4E32RcDyvCwhIgDOFNF+PgbMyVtpjX4/E+yi6NJuIFypXxuxl/fM3tAM6aG3RXjgYU6lIKjTNNtQphtri7HZZMaWx118cRrs2RCFa3E+FVCCuR4JILTI7Jt6vV5TCPBN86O1vAXOOfrMiYKuxmdTP23O2tY4EShe/N7xaRNwBv5Dn+IEWNby7p2VH53kW+ESKIWGrRH9C8k0wlp0hzxdKCWYaQQcziDE8x3q9LTkW1lODsFHhqIwZTKYyS+UuyWAoKE0SbEi2PlWXOY2YLP/pCT3lOPUEGMuF9dBG8baP1WsfFsiiYSMhsz2/5NAGKQm4j7yhUwyeemAxG8FAVKpKLWCGKwQ6f7eEz5GlmDgiH76aJ4Vcm10ZxkfLlxm8E9UnottdrPQQWOq2PWsgtWWrQXsC6dgCdWfJPzRGLbLX/VNf+/rD45YHxkqFx2MZHRslf6uyOS/6r1j7ZWtVb7bWXwpRrg2qesw2lFlVrGWTFVXLYVd1e9GrGTHJBEp8dU1bbtviTKtjuoA46qT/1g3cyOKIK+YitIJngVbI+oeVmR3C0NORJ8z2S9DvmxLBooAgAAA==")

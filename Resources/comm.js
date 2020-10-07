@@ -3,11 +3,11 @@ function gameUpdateLongPoll(callback) {
     xhttp.onreadystatechange = function() {
         if (this.readyState == 4) {
             if (this.status == 200) {
+                setTimeout(function() { gameUpdateLongPoll(callback) }, 1);
                 let responseJson = JSON.parse(this.responseText);
                 if (responseJson != undefined) {
                     callback(responseJson);
                 }
-                setTimeout(function() { gameUpdateLongPoll(callback) }, 1);
             } else {
                 setTimeout(function() { gameUpdateLongPoll(callback) }, 1000);
             }
