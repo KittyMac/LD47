@@ -39,7 +39,6 @@ public class LD47UserSession: UserSession {
                 let timeToWait = max(min(0.1 - (ProcessInfo.processInfo.systemUptime - timeIntervalOfLastUpdate), 1), 0)
 
                 Flynn.Timer(timeInterval: timeToWait, repeats: false, self) { (_) in
-                    self.timeIntervalOfLastUpdate = ProcessInfo.processInfo.systemUptime
                     Flynn.Root.remoteActorByUUID(GameService.serviceName, self) {
                         if let game = $0 as? GameService {
                             game.beGetBoard(self.unsafeSessionUUID,
@@ -47,6 +46,7 @@ public class LD47UserSession: UserSession {
                                             self.lastVisibleBoardHeight,
                                             self) {
                                 connection.beSendData(HttpResponse.asData(self, .ok, .txt, $0))
+                                self.timeIntervalOfLastUpdate = ProcessInfo.processInfo.systemUptime
                             }
                         }
                     }
