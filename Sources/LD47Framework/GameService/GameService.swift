@@ -25,9 +25,9 @@ class GameService: RemoteActor {
 
     private func reset() {
 #if DEBUG
-        game = Game(42, 50, 20)
+        game = Game(Int(NSDate().timeIntervalSinceReferenceDate), 50, 20)
 #else
-        game = Game(42, 4000, 250)
+        game = Game(Int(NSDate().timeIntervalSinceReferenceDate), 4000, 250)
 #endif
     }
 
