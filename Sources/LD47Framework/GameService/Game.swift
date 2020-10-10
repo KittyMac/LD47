@@ -204,7 +204,7 @@ class Game: Actor {
         var visNodes: [Int: Node] = [:]
         var visPlayers: [Player] = []
 
-        safeNodesNear(playerNode.x, playerNode.y, visWidth/2, visHeight/2, &visNodes)
+        safeNodesNear(playerNode.x, playerNode.y, visWidth, visHeight, &visNodes)
 
         // 2. run back through the nodes, add any nodes which are connected to a visNode
         for node in visNodes.values {
