@@ -37,10 +37,10 @@ public class LD47UserSession: UserSession {
 
                 // We want to rate limit the gameboard updates to only allow 10 updates
                 // per second. However, we don't want to penalize users for lag.
-                let timeToWait = max(min(0.1 - (ProcessInfo.processInfo.systemUptime - timeIntervalOfLastUpdate), 0.1), 0)
-
+                //let timeToWait = max(min(0.1 - (ProcessInfo.processInfo.systemUptime - timeIntervalOfLastUpdate), 0.1), 0)
+                let timeToWait = 0.1
                 Flynn.Timer(timeInterval: timeToWait, repeats: false, self) { (_) in
-                    self.timeIntervalOfLastUpdate = ProcessInfo.processInfo.systemUptime
+                    //self.timeIntervalOfLastUpdate = ProcessInfo.processInfo.systemUptime
 
                     Flynn.Root.remoteActorByUUID(GameService.serviceName, self) {
                         if let game = $0 as? GameService {
