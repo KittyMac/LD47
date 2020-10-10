@@ -204,7 +204,7 @@ class Game: Actor {
         var visNodes: [Int: Node] = [:]
         var visPlayers: [Player] = []
 
-        safeNodesNear(playerNode.x, playerNode.y, visWidth, visHeight, &visNodes)
+        safeNodesNear(playerNode.x, playerNode.y, visWidth/2, visHeight/2, &visNodes)
 
         // 2. run back through the nodes, add any nodes which are connected to a visNode
         for node in visNodes.values {
@@ -223,6 +223,15 @@ class Game: Actor {
                 abs(otherPlayerNode.y - playerNode.y) < visHeight) ||
                 otherPlayer.immune {
                 visPlayers.append(otherPlayer)
+            }
+        }
+
+        // We need to ensure that the nodes for all visible players are included,
+        // otherwise they cannot be drawn
+        for otherPlayer in visPlayers {
+            let otherPlayerNode = safeNodes[otherPlayer.nodeIdx]
+            if visNodes[otherPlayerNode.id] == nil {
+                visNodes[otherPlayerNode.id] = otherPlayerNode
             }
         }
 
