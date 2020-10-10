@@ -1,11 +1,7 @@
 
 upstream ld47 {
-#   ip_hash;
    hash $remote_addr;
-   server 192.168.1.211:8080;
    server 192.168.1.212:8080;
-   server 192.168.1.214:8080;
-   server 192.168.1.215:8080;
 }
 
 server {
@@ -13,5 +9,19 @@ server {
 
     location / {
         proxy_pass http://ld47;
+    }
+}
+
+
+upstream so10 {
+   hash $remote_addr;
+   server 192.168.1.211:8080;
+}
+
+server {
+    listen 1010;
+
+    location / {
+        proxy_pass http://so10;
     }
 }

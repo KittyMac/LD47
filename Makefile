@@ -79,19 +79,10 @@ delete-nginx:
 delete-http1:
 	ssh ubuntu@192.168.1.211 "cd LD47; git checkout .; git pull; make install-http"
 
-delete-http2:
-	ssh ubuntu@192.168.1.212 "cd LD47; git checkout .; git pull; make install-http"
-
 delete-game1:
 	ssh ubuntu@192.168.1.213 "cd LD47; git checkout .; git pull; make install-game"
 
-delete-http3:
-	ssh ubuntu@192.168.1.214 "cd LD47; git checkout .; git pull; make install-http"
-
-delete-http4:
-	ssh ubuntu@192.168.1.215 "cd LD47; git checkout .; git pull; make install-http"
-
-delete-cluster: delete-nginx delete-http1 delete-http2 delete-game1 delete-http3 delete-http4
+delete-cluster: delete-nginx delete-http1 delete-game1
 
 
 
@@ -103,23 +94,11 @@ update-http1:
 	-ssh ubuntu@192.168.1.211 "git clone https://github.com/KittyMac/LD47"
 	ssh ubuntu@192.168.1.211 "cd LD47; git checkout .; git pull; make install-http"
 
-update-http2:
-	-ssh ubuntu@192.168.1.212 "git clone https://github.com/KittyMac/LD47"
-	ssh ubuntu@192.168.1.212 "cd LD47; git checkout .; git pull; make install-http"
-
 update-game1:
 	-ssh ubuntu@192.168.1.213 "git clone https://github.com/KittyMac/LD47"
 	ssh ubuntu@192.168.1.213 "cd LD47; git checkout .; git pull; make install-game"
 
-update-http3:
-	-ssh ubuntu@192.168.1.214 "git clone https://github.com/KittyMac/LD47"
-	ssh ubuntu@192.168.1.214 "cd LD47; git checkout .; git pull; make install-http"
-
-update-http4:
-	-ssh ubuntu@192.168.1.215 "git clone https://github.com/KittyMac/LD47"
-	ssh ubuntu@192.168.1.215 "cd LD47; git checkout .; git pull; make install-http"
-
-update-cluster: update-nginx update-http1 update-http2 update-game1 update-http3 update-http4
+update-cluster: update-nginx update-http1 update-game1
 
 
 
@@ -129,19 +108,10 @@ restart-nginx:
 restart-http1:
 	ssh ubuntu@192.168.1.211 "sudo systemctl restart ld47_http"
 
-restart-http2:
-	ssh ubuntu@192.168.1.212 "sudo systemctl restart ld47_http"
-
 restart-game1:
 	ssh ubuntu@192.168.1.213 "sudo systemctl restart ld47_game"
 
-restart-http3:
-	ssh ubuntu@192.168.1.214 "sudo systemctl restart ld47_http"
-
-restart-http4:
-	ssh ubuntu@192.168.1.215 "sudo systemctl restart ld47_http"
-
-restart-cluster: restart-nginx restart-http1 restart-http2 restart-game1 restart-http3 restart-http4
+restart-cluster: restart-nginx restart-http1 restart-game1
 
 
 status-nginx:
@@ -150,15 +120,6 @@ status-nginx:
 status-http1:
 	ssh ubuntu@192.168.1.211 "sudo systemctl status -n 300000 ld47_http"
 
-status-http2:
-	ssh ubuntu@192.168.1.212 "sudo systemctl status -n 300000 ld47_http"
-
 status-game1:
 	ssh ubuntu@192.168.1.213 "sudo systemctl status -n 300000 ld47_game"
-
-status-http3:
-	ssh ubuntu@192.168.1.214 "sudo systemctl status -n 300000 ld47_http"
-
-status-http4:
-	ssh ubuntu@192.168.1.215 "sudo systemctl status -n 300000 ld47_http"
 
