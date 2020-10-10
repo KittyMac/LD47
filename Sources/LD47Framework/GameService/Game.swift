@@ -28,6 +28,8 @@ struct BoardUpdate: Codable {
     var lastWinner: String
     var adminMessage: String
 
+    var count: UInt16
+
     var nodes: [Node]
     var players: [Player]
     var player: Player?
@@ -61,6 +63,8 @@ class Game: Actor {
     private var scores: [Int] = [0, 0, 0, 0]
 
     public var safeMaxNodeDistance = 0
+
+    private var boardUpdateCount: UInt16 = 0
 
     private let rng: Randomable = Xoroshiro256StarStar()
 
@@ -223,8 +227,11 @@ class Game: Actor {
             }
         }
 
+        boardUpdateCount = boardUpdateCount &+ 1
+
         return BoardUpdate(lastWinner: lastWinnerString,
                            adminMessage: lastAdminMessageString,
+                           count: boardUpdateCount,
                            nodes: Array(visNodes.values),
                            players: visPlayers,
                            player: nil,

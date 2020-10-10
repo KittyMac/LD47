@@ -293,6 +293,17 @@
                 return;
             }
             
+            // We need to reject out-of-order board updates.  The count value is 0-65535 and loops.
+            if (lastBoardUpdate != undefined) {
+                if (board.count > lastBoardUpdate.count ||
+                    lastBoardUpdate.count >= 32767 && board.count < 32767) {
+                
+                } else {
+                    print("skipping out of order board update")
+                    return;
+                }
+            }
+            
             lastBoardUpdate = board;
             
             // -1. we want to center the board around the player's nodeidx
