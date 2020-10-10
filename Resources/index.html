@@ -74,6 +74,8 @@
         var pixiFinishedLoading = false;
         var selectedTeam = 0
         
+        let vec2 = glMatrix.vec2
+        
         // because i always make this mistake!
         print = console.log
         
@@ -81,6 +83,8 @@
         var kBoardToScreen = 50;
         var kNodeSize = 10;
         var kPlayerSize = 65;
+        
+        var lastMousePos = undefined
         
         //const kBoardToScreen = 10
         //const kNodeSize = 4
@@ -312,7 +316,29 @@
             
             boardGfx.clear()
             
+            var playerNode = undefined
+            var moveTint = 0x979797;
+            if (thisPlayer != undefined) {
+                playerNode = getNodeByIdx(nodes, thisPlayer.nodeIdx);
+                
+                let team = thisPlayer.teamId;
+                if (team == 0) {
+                    moveTint = 0x1c6613;
+                } else if (team == 1) {
+                    moveTint = 0x662a20;
+                } else if (team == 2) {
+                    moveTint = 0x154766;
+                } else if (team == 3) {
+                    moveTint = 0x66603f;
+                }
+            }
+            
+            let highlightNode = calculateMoveToNode(lastMousePos);
+            
             // 0. draw all of the lines connecting the nodes
+            let highlightNodeID = highlightNode != undefined ? highlightNode.id : -1
+            let playerNodeID = playerNode != undefined ? playerNode.id : -1
+            
             boardGfx.lineStyle(5, 0x373737, 1);
             for (i in nodes) {
                 let node = nodes[i];
@@ -321,6 +347,14 @@
                 for (j in node.c) {
                     let nextNode = getNextNode(nodes, node, j);
                     if (nextNode != undefined) {
+                        
+                        if (nextNode.id == highlightNodeID && node.id == playerNodeID ||
+                            nextNode.id == playerNodeID && node.id == highlightNodeID) {
+                            boardGfx.lineStyle(5, moveTint, 1);
+                        }else{
+                            boardGfx.lineStyle(5, 0x373737, 1);
+                        }
+                        
                         let posB = getNodePos(nextNode);
                         boardGfx.moveTo(posA[0], posA[1]);
                         boardGfx.lineTo(posB[0], posB[1]);
@@ -347,7 +381,7 @@
             
             // 3. special stuff for THE player
             if (thisPlayer != undefined) {
-                let playerNode = getNodeByIdx(nodes, thisPlayer.nodeIdx);
+                playerNode = getNodeByIdx(nodes, thisPlayer.nodeIdx);
                 let pos = getNodePos(playerNode);
                 nodeText.x = pos[0];
                 nodeText.y = pos[1] + kPlayerSize * 0.75;
@@ -515,23 +549,32 @@
                 playButton.click();
 			}
 		});
-                
         
-        function onPointerDown(event) {
-            if (playerCanMove == false) {
-                return;
+        function calculateMoveToNode(mousePos) {
+            if (mousePos == undefined) {
+                return undefined;
             }
             if (thisPlayer == undefined) {
-                return;
+                return undefined;
             }
             
-            let mousePos = event.data.getLocalPosition(gameContainer)
-            
-            // find the node nearest the click
+            // find the best node to go to given the angle of the mouse click in
+            // relation to the player's node
             var clickNode = undefined
-            var clickNodeDistance = 999999999
+            var clickNodeMinAngle = 999999999
             let nodes = lastBoardUpdate.nodes;
             let playerNode = getNodeByIdx(nodes, thisPlayer.nodeIdx);
+            if (playerNode == undefined) {
+                return undefined;
+            }
+            
+            let playerNodePos = getNodePos(playerNode);
+            
+            // get the angle between the player's node pos and the mouse pos
+            let nodeToMouseVec = vec2.create()
+            vec2.set(nodeToMouseVec, (mousePos.x - playerNodePos[0]), (mousePos.y - playerNodePos[1]))            
+
+            let otherNodeVec = vec2.create()
             
             for (i in nodes) {
                 let node = nodes[i];
@@ -539,16 +582,29 @@
                 // disclude the player's node, only include nodes which are adjacent to player node
                 if (node.id != thisPlayer.nodeIdx && playerNode.c.includes(node.id)) {
                     let pos = getNodePos(node);
-                    let dx = (mousePos.x - pos[0])
-                    let dy = (mousePos.y - pos[1])
-                    let d = dx * dx + dy * dy;
-                
-                    if (clickNode == undefined || d < clickNodeDistance) {
+                    
+                    vec2.set(otherNodeVec, (pos[0] - playerNodePos[0]), (pos[1] - playerNodePos[1]))
+                    
+                    let angle = vec2.angle(nodeToMouseVec, otherNodeVec);                    
+                                    
+                    if (clickNode == undefined || angle < clickNodeMinAngle) {
                         clickNode = node;
-                        clickNodeDistance = d;
+                        clickNodeMinAngle = angle;
                     }
                 }
             }
+            
+            return clickNode
+        }
+        
+        function onPointerDown(event) {
+            if (playerCanMove == false) {
+                return;
+            }
+            
+            let mousePos = event.data.getLocalPosition(gameContainer);
+            
+            var clickNode = calculateMoveToNode(mousePos);
             
             if (clickNode != undefined) {
                 movePlayer(clickNode.id, function (info) {
@@ -559,6 +615,11 @@
             }
         }
         app.renderer.plugins.interaction.on('pointerdown', onPointerDown);
+        
+        function onPointerMove(event) {
+            lastMousePos = event.data.getLocalPosition(gameContainer);            
+        }
+        app.renderer.plugins.interaction.on('pointermove', onPointerMove);
         
         
         app.loader

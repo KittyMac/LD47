@@ -21,6 +21,7 @@ let kResetScoreTotal = 25_000
 
 private var lastWinnerString = "This is the first round; go, Go, GO!"
 private var allTimeHumanIDs: [String: Bool] = [:]
+private var boardUpdateCount: UInt16 = 0
 
 struct BoardUpdate: Codable {
     var tag: String = "BoardUpdate"
@@ -63,8 +64,6 @@ class Game: Actor {
     private var scores: [Int] = [0, 0, 0, 0]
 
     public var safeMaxNodeDistance = 0
-
-    private var boardUpdateCount: UInt16 = 0
 
     private let rng: Randomable = Xoroshiro256StarStar()
 
