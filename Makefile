@@ -37,7 +37,7 @@ install-nginx:
 	sudo apt-get install nginx
 	sudo apt autoremove
 	sudo rm -f /etc/nginx/sites-enabled/default
-	sudo cp meta/nginx_ld47 /etc/nginx/sites-enabled/nginx_ld47
+	sudo cp meta/nginx_shared /etc/nginx/sites-enabled/nginx_shared
 	sudo service nginx start
 
 install-http: update build
@@ -59,7 +59,7 @@ install-game: update build
 uninstall-nginx:
 	-sudo service nginx stop
 	-sudo rm -f /etc/nginx/sites-enabled/default
-	-sudo rm /etc/nginx/sites-enabled/nginx_ld47
+	-sudo rm /etc/nginx/sites-enabled/nginx_shared
 
 uninstall-http:
 	-sudo systemctl stop ld47_http	
