@@ -297,9 +297,26 @@
                 return;
             }
             
+            let nodes = board.nodes;
+            let players = board.players;
+            
+            // handle any events which were sent along with this update
+            let eventPlayerKills = board.eventPlayerKills;
+            for (i in eventPlayerKills) {
+                let event = eventPlayerKills[i];
+                
+                let playerKilled = event.player;
+                let node = getNodeByIdx(nodes, playerKilled.nodeIdx);
+                
+                if (node != undefined) {
+                    let pos = getNodePos(node);
+                    explode(playerKilled.teamId, pos[0], pos[1], 6);
+                }
+            }
+            
             // We need to reject out-of-order board updates.  The count value is 0-65535 and loops.
             if (lastBoardUpdate != undefined) {
-                if (board.count > lastBoardUpdate.count ||
+                if (board.count >= lastBoardUpdate.count ||
                     lastBoardUpdate.count >= 32767 && board.count < 32767) {
                 
                 } else {
@@ -311,9 +328,6 @@
             lastBoardUpdate = board;
             
             // -1. we want to center the board around the player's nodeidx
-            let nodes = board.nodes;
-            let players = board.players;
-            
             boardGfx.clear()
             
             var playerNode = undefined
@@ -466,20 +480,6 @@
             score1Text.text = "SCORE: " + board.scores[1];
             score2Text.text = "SCORE: " + board.scores[2];
             score3Text.text = "SCORE: " + board.scores[3];
-            
-            // handle any events which were sent along with this update
-            let eventPlayerKills = board.eventPlayerKills;
-            for (i in eventPlayerKills) {
-                let event = eventPlayerKills[i];
-                
-                let playerKilled = event.player;
-                let node = getNodeByIdx(nodes, playerKilled.nodeIdx);
-                
-                if (node != undefined) {
-                    let pos = getNodePos(node);
-                    explode(playerKilled.teamId, pos[0], pos[1], 6);
-                }
-            }
         }
         
         welcomeDialog.closed = true;
