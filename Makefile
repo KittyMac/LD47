@@ -32,27 +32,29 @@ test-game: build
 
 
 install-nginx:
-	sudo service nginx stop
-	sudo apt-get update
-	sudo apt-get install nginx
-	sudo apt autoremove
-	sudo rm -f /etc/nginx/sites-enabled/default
-	sudo cp meta/nginx_shared /etc/nginx/sites-enabled/nginx_shared
-	sudo service nginx start
+	-sudo service nginx stop
+	-sudo apt-get update
+	-sudo apt-get install nginx
+	-sudo apt autoremove
+	-sudo rm -f /etc/nginx/sites-enabled/default
+	-sudo rm -f /etc/nginx/sites-available/default
+	-sudo cp meta/nginx_shared /etc/nginx/sites-enabled/nginx_shared
+	-sudo cp meta/nginx_shared /etc/nginx/sites-available/nginx_shared
+	-sudo service nginx start
 
 install-http: update build
 	-sudo systemctl stop ld47_http	
-	sudo cp meta/ld47_http.service /etc/systemd/system/ld47_http.service
-	sudo systemctl start ld47_http
-	sudo systemctl enable ld47_http
-	sudo systemctl daemon-reload
+	-sudo cp meta/ld47_http.service /etc/systemd/system/ld47_http.service
+	-sudo systemctl start ld47_http
+	-sudo systemctl enable ld47_http
+	-sudo systemctl daemon-reload
 
 install-game: update build
 	-sudo systemctl stop ld47_game
-	sudo cp meta/ld47_game.service /etc/systemd/system/ld47_game.service
-	sudo systemctl start ld47_game
-	sudo systemctl enable ld47_game
-	sudo systemctl daemon-reload
+	-sudo cp meta/ld47_game.service /etc/systemd/system/ld47_game.service
+	-sudo systemctl start ld47_game
+	-sudo systemctl enable ld47_game
+	-sudo systemctl daemon-reload
 
 
 

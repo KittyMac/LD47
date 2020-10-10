@@ -19,7 +19,7 @@ upstream so10 {
 }
 
 server {
-    listen 1010;
+    listen 9688;
 
     location / {
         proxy_pass http://so10;
