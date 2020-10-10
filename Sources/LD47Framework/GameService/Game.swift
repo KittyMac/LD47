@@ -219,8 +219,8 @@ class Game: Actor {
 
             // include "immune" players as this will allow players flying across the map
             // because they found the exit to be visible
-            if  (abs(otherPlayerNode.x - playerNode.x) < visWidth &&
-                abs(otherPlayerNode.y - playerNode.y) < visHeight) ||
+            if  (abs(otherPlayerNode.x - playerNode.x) < visWidth * 2 &&
+                abs(otherPlayerNode.y - playerNode.y) < visHeight * 2) ||
                 otherPlayer.immune {
                 visPlayers.append(otherPlayer)
             }
